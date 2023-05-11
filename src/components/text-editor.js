@@ -70,7 +70,7 @@ export default function TextEditor ({fontFamily, setFontFamily}){
     if (!newFontName.trim()) {
       setError(true);
       return;
-      }
+    }
       
     // Agrega la nueva fuente a la lista de fuentes personalizadas
     const newFont = {
