@@ -10,8 +10,9 @@ import {
   ColorSwatchIcon,
 } from "@heroicons/react/outline";
 import ColorPalette from "./color-palette";
+import TextEditor from "./text-editor";
 
-export default function SidePanel({ onColorChange }) {
+export default function SidePanel({ onColorChange, setFontFamily }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
 
@@ -30,7 +31,7 @@ export default function SidePanel({ onColorChange }) {
     },
     {
       label: "Text",
-      content: "Aqui se mostraran los textos",
+      content: <TextEditor setFontFamily={setFontFamily} />,
       icon: PencilIcon,
     },
     {
