@@ -11,8 +11,15 @@ import {
 } from "@heroicons/react/outline";
 import ColorPalette from "./color-palette";
 import TextEditor from "./text-editor";
+import ImageEditor from "./image-editor";
 
-export default function SidePanel({ onColorChange, setFontFamily }) {
+export default function SidePanel({
+  onColorChange,
+  setFontFamily, 
+  imageList,
+  setImageList,
+  setCanvasElements,
+}) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
 
@@ -36,7 +43,11 @@ export default function SidePanel({ onColorChange, setFontFamily }) {
     },
     {
       label: "Images",
-      content: "Aqui se mostraran imagenes",
+      content: <ImageEditor 
+        imageList={imageList} 
+        setImageList={setImageList} 
+        setCanvasElements={setCanvasElements}
+      />,
       icon: PhotographIcon,
     },
     {
