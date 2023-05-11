@@ -1,8 +1,9 @@
-import { React, useRef, useState, useEffect } from "react";
-import { Stage, Layer, Rect, Text } from "react-konva";
+import { React, Fragment, useRef, useState, useEffect } from "react";
+import { Stage, Layer, Rect, Text, Image } from "react-konva";
 import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
+import { LoadImage } from "./components/image-editor";
 
 export const Background = ({ height, width, color }) => {
   let newWidth = 0;
@@ -43,7 +44,9 @@ const FONT_FAMILY_LIST = [
 
 export default function App() {
   const containerRef = useRef(null);
+  const stageRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [selectedElement, setSelectedElement] = useState(null);
 
   useEffect(() => {
     function handleResize() {
@@ -62,11 +65,23 @@ export default function App() {
     };
   }, []);
 
-  const [state, setState] = useState({
-    isDragging: false,
-    x: 10,
-    y: 50,
-  });
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Delete" && selectedElement) {
+        const newElements = canvasElements.filter(
+          (element) => element.id !== selectedElement.id
+        );
+        setCanvasElements(newElements);
+        setSelectedElement(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown)
+  
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    } 
+  }, [selectedElement]);
 
   const [selectedColor, setSelectedColor] = useState("#ffffff");
 
@@ -76,11 +91,166 @@ export default function App() {
 
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
 
+  // we must load images from database to this state
+  const [imageList, setImageList] = useState([
+    { url: "https://picsum.photos/200/300?id=1", selected: false },
+    { url: "https://picsum.photos/200/300?id=2", selected: false },
+    { url: "https://picsum.photos/200/300?id=3", selected: false }
+  ]);
+
+  // CANVAS ELEMENTS, please add all elements you want to render in the canvas
+  // I added a text element as an example
+  const [canvasElements, setCanvasElements] = useState([
+    {
+      id: "1",
+      type: "text",
+      draggable: true,
+      state: {
+        isDragging: false,
+        x: 10,
+        y: 50,
+        text: "Draggable Text",
+        fontFamily: "Roboto",
+        fontSize: 20,
+      },
+    },
+    {
+      id: "2",
+      type: "text",
+      draggable: false,
+      state: {
+        isDragging: false,
+        x: 100,
+        y: 50,
+        text: "Draggable Text 2",
+        fontFamily: "Verdana",
+        fontSize: 40,
+      },
+    },
+    {
+      id: "4",
+      type: "image",
+      draggable: true,
+      state: {
+        isDragging: false,
+        x: 200,
+        y: 200,
+        width: 300,
+        height: 250,
+        url: "https://cdn130.picsart.com/280172553005211.png",
+      },
+
+    }
+  ]);
+
+  // This function is called when the user changes the size of an element
+  // updates the width and height of the element or any other element attributes
+  const onChange = (element, newAttrs) => {
+    setCanvasElements((prevState) => {
+      const index = prevState.findIndex(
+        (item) => item.id === element.id
+      );
+      const newElements = [...prevState];
+      newElements[index] = {
+        ...newElements[index],
+        state: {
+          ...newElements[index].state,
+          ...newAttrs,
+        },
+      };
+      return newElements;
+    });
+  }
+
+  // This function is called when the user starts dragging an element
+  // sets the element state to isDragging = true
+  const onDragStart = (element) => {
+    onChange(element, {
+      isDragging: true,
+    });
+  }
+
+  // This function is called when the user stops dragging an element
+  // sets the element state to isDragging = false and updates the x and y coordinates
+  const onDragEnd = (e, element) => {
+    onChange(element, {
+      isDragging: false,
+      x: e.target.x(),
+      y: e.target.y(),
+    });
+  }
+
+  // This function is called when the user clicks on an element
+  // sets the selectedElement state to the element that was clicked
+  const onSelect = (element) => {
+    setSelectedElement(element);
+    onChange(element, {
+      selected: true,
+    });
+  }
+
+  // This function is called to render the canvas elements
+  const getCanvasElement = (element) => {
+    if (element.type === "text") {
+      return (
+        <Text
+          text={element.state.text}
+          x={element.state.x}
+          y={element.state.y}
+          fontFamily={element.state.fontFamily}
+          fontSize={element.state.fontSize}
+          draggable={element.draggable}
+          fill={element.state.isDragging ? "green" : "black"}
+          onDragStart={() => onDragStart(element)}
+          onDragEnd={(e) => onDragEnd(e, element)}
+        />
+      )
+    }
+    if (element.type === "image") {
+      return (
+        <LoadImage
+          id={element.id}
+          url={element.state.url}
+          x={element.state.x}
+          y={element.state.y}
+          width={element.state.width}
+          height={element.state.height}
+          draggable={element.draggable}
+          onDragStart={() => onDragStart(element)}
+          onDragEnd={(e) => onDragEnd(e, element)}
+          isSelected={selectedElement && selectedElement.id === element.id}
+          onSelect={() => onSelect(element)}
+          onChange={(newAttrs) => onChange(element, newAttrs)}
+        />
+      )
+    }
+    return <></>;
+  }
+
+  // deselect when clicked on empty area
+  const handleDeselectElement = (e) => {
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      setSelectedElement(null);
+      canvasElements.forEach((element) => {
+        onChange(element, {
+          selected: false,
+        });
+      });
+    }
+  };
+
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
         <div className="md:col-span-4">
-          <SidePanel onColorChange={handleColorChange} setFontFamily={setFontFamily} />
+          <SidePanel
+            onColorChange={handleColorChange}
+            setFontFamily={setFontFamily}
+            imageList={imageList}
+            setImageList={setImageList}
+            setCanvasElements={setCanvasElements}
+          />
         </div>
         <div className="col-span-12 md:col-span-8">
           <ToolbarLabel />
@@ -94,6 +264,10 @@ export default function App() {
               width={dimensions.width}
               height={dimensions.height}
               style={{ border: "1px solid lightgray" }}
+              onMouseDown={handleDeselectElement}
+              onTouchStart={handleDeselectElement}
+              ref={stageRef}
+              
             >
               <Layer>
                 <Background
@@ -102,27 +276,11 @@ export default function App() {
                   color={selectedColor}
                 />
                 {/* Esto es solo un ejemplo de drag and drop*/}
-                <Text
-                  text="Draggable Text"
-                  x={state.x}
-                  y={state.y}
-                  fontFamily={fontFamily}
-                  fontSize={20}
-                  draggable
-                  fill={state.isDragging ? "green" : "black"}
-                  onDragStart={() => {
-                    setState({
-                      isDragging: true,
-                    });
-                  }}
-                  onDragEnd={(e) => {
-                    setState({
-                      isDragging: false,
-                      x: e.target.x(),
-                      y: e.target.y(),
-                    });
-                  }}
-                />
+                {canvasElements.map((element) => (
+                  <Fragment key={element.id}>
+                    {getCanvasElement(element)}
+                  </Fragment>
+                ))}
               </Layer>
             </Stage>
 
