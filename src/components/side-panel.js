@@ -9,8 +9,9 @@ import {
   DeviceMobileIcon,
   ColorSwatchIcon,
 } from "@heroicons/react/outline";
+import TextEditor from "./text-editor";
 
-export default function SidePanel() {
+export default function SidePanel({setFontFamily}) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
 
@@ -22,7 +23,7 @@ export default function SidePanel() {
     },
     {
       label: "Text",
-      content: "Aqui se mostraran los textos",
+      content: <TextEditor setFontFamily={setFontFamily} />,
       icon: PencilIcon,
     },
     {

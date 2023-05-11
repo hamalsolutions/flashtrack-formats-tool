@@ -34,6 +34,13 @@ export const Background = ({ height, width }) => {
   );
 };
 
+const FONT_FAMILY_LIST = [
+  { name: 'Roboto', value: 'Roboto' },
+  { name: 'Arial', value: 'Arial' },
+  { name: 'Verdana', value: 'Verdana' },
+];
+
+
 export default function App() {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -57,15 +64,17 @@ export default function App() {
 
   const [state, setState] = useState({
     isDragging: false,
-    x: 50,
+    x: 10,
     y: 50,
   });
+
+  const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
 
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
         <div className="md:col-span-4">
-          <SidePanel />
+          <SidePanel setFontFamily={setFontFamily}/>
         </div>
         <div className="col-span-12 md:col-span-8">
           <ToolbarLabel />
@@ -90,6 +99,8 @@ export default function App() {
                   text="Draggable Text"
                   x={state.x}
                   y={state.y}
+                  fontFamily={fontFamily}
+                  fontSize={20}
                   draggable
                   fill={state.isDragging ? "green" : "black"}
                   onDragStart={() => {
