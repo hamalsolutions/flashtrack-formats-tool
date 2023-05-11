@@ -4,7 +4,7 @@ import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
 
-export const Background = ({ height, width }) => {
+export const Background = ({ height, width, color }) => {
   let newWidth = 0;
   let newX = 0;
   let newY = 0;
@@ -26,7 +26,7 @@ export const Background = ({ height, width }) => {
       width={newWidth}
       x={newX}
       y={newY}
-      fill={"white"}
+      fill={color}
       shadowColor={"black"}
       shadowBlur={10}
       shadowOpacity={0.5}
@@ -61,11 +61,18 @@ export default function App() {
     y: 50,
   });
 
+  const [selectedColor, setSelectedColor] = useState("#ffffff");
+
+  function handleColorChange(newColor) {
+    setSelectedColor(newColor);
+  }
+
+
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
         <div className="md:col-span-4">
-          <SidePanel />
+          <SidePanel onColorChange={handleColorChange} />
         </div>
         <div className="col-span-12 md:col-span-8">
           <ToolbarLabel />
@@ -84,6 +91,7 @@ export default function App() {
                 <Background
                   width={dimensions.width}
                   height={dimensions.height}
+                  color={selectedColor}
                 />
                 {/* Esto es solo un ejemplo de drag and drop*/}
                 <Text

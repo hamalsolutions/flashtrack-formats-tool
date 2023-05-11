@@ -9,10 +9,18 @@ import {
   DeviceMobileIcon,
   ColorSwatchIcon,
 } from "@heroicons/react/outline";
+import ColorPalette from "./color-palette";
 
-export default function SidePanel() {
+export default function SidePanel({ onColorChange }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
+
+  const [selectedColor, setSelectedColor] = useState("#ffffff");
+
+  function handleColorChange(newColor) {
+    setSelectedColor(newColor);
+    onColorChange(newColor);
+  }
 
   const tabs = [
     {
@@ -42,7 +50,12 @@ export default function SidePanel() {
     },
     {
       label: "Background",
-      content: "Aqui podra seleccionar colores o diseños para el fondo",
+      content: (
+        <ColorPalette
+          initialColor={selectedColor}
+          onColorChange={handleColorChange}
+        />
+      ),
       icon: ColorSwatchIcon,
     },
     {
@@ -111,7 +124,7 @@ export default function SidePanel() {
         {/* A partir de aqui side bar option mobile*/}
         <div className="col-span-4 block md:hidden">
           <nav className="bg-white fixed bottom-0 left-0 right-0 z-40 overflow-auto border">
-            <div className="max-w-7xl mx-auto px-2">s
+            <div className="max-w-7xl mx-auto px-2">
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center">
                   <div className="flex items-baseline space-x-4 z-40">
