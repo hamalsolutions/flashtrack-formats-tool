@@ -18,6 +18,8 @@ export default function SidePanel({
   setFontFamily, 
   imageList,
   setImageList,
+  barcodeImageList,
+  setBarcodeImageList,
   setCanvasElements,
 }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -46,6 +48,8 @@ export default function SidePanel({
       content: <ImageEditor 
         imageList={imageList} 
         setImageList={setImageList} 
+        barcodeImageList={barcodeImageList}
+        setBarcodeImageList={setBarcodeImageList}
         setCanvasElements={setCanvasElements}
       />,
       icon: PhotographIcon,

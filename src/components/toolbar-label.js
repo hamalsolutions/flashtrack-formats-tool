@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Disclosure } from "@headlessui/react";
 import {
   TrashIcon,
@@ -9,8 +10,29 @@ import {
   TemplateIcon,
 } from "@heroicons/react/outline";
 
+export default function ToolbarLabel({
+  selectedElement,
+  handleDynamicElement
+}) {
+  const [checked, setChecked] = useState(false);
+  const isSelected = !!selectedElement;
 
-export default function ToolbarLabel() {
+  useEffect(() => {
+    const isChecked = (isSelected) 
+      ? selectedElement.isDynamic || false 
+      : false;
+    setChecked(isChecked);
+  }, [selectedElement]);
+
+  const markCheckbox = (e) => {
+    if (selectedElement) {
+      handleDynamicElement(selectedElement, e.target.checked);
+      setChecked(e.target.checked);
+    } {
+      setChecked(false);
+    }
+  };
+
   return (
     <div>
       <Disclosure as="nav" className="bg-white">
@@ -43,6 +65,18 @@ export default function ToolbarLabel() {
                 <div className="md:ml-6 md:flex md:items-center md:space-x-4"></div>
               </div>
               <div className="flex items-center">
+                <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center ">
+                  <label className="inline-flex items-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded-full border-gray-300 text-ft-blue-300 shadow-sm focus:border-ft-blue-300 focus:ring focus:ring-ft-blue-200 focus:ring-opacity-50" 
+                      onClick={markCheckbox} 
+                      checked={checked}
+                      disabled={!isSelected}
+                    />
+                    <span className="ml-2 text-gray-700">Mark as Dynamic</span>
+                  </label>
+                </div>
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">
                   <button
                     type="button"

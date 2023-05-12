@@ -65,9 +65,10 @@ export default function App() {
     };
   }, []);
 
+  // listens to the key delete to remove the selected element
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Delete" && selectedElement) {
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedElement) {
         const newElements = canvasElements.filter(
           (element) => element.id !== selectedElement.id
         );
@@ -93,9 +94,25 @@ export default function App() {
 
   // we must load images from database to this state
   const [imageList, setImageList] = useState([
-    { url: "https://picsum.photos/200/300?id=1", selected: false },
-    { url: "https://picsum.photos/200/300?id=2", selected: false },
-    { url: "https://picsum.photos/200/300?id=3", selected: false }
+    { url: "https://picsum.photos/200/300?id=1" },
+    { url: "https://picsum.photos/200/300?id=2" },
+    { url: "https://picsum.photos/200/300?id=3" },
+    { url: "https://picsum.photos/200/300?id=4" },
+    { url: "https://picsum.photos/200/300?id=5" },
+    { url: "https://picsum.photos/200/300?id=6" },
+    { url: "https://picsum.photos/200/300?id=7" },
+    { url: "https://picsum.photos/200/300?id=8" },
+    { url: "https://picsum.photos/200/300?id=9" },
+    { url: "https://picsum.photos/200/300?id=0" },
+    { url: "https://picsum.photos/200/300?id=11" },
+    { url: "https://picsum.photos/200/300?id=12" },
+    { url: "https://picsum.photos/200/300?id=13" },
+  ]);
+
+  // we must load images from database to this state
+  const [barcodeImageList, setBarcodeImageList] = useState([
+    { url: "https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-c133d21/wp-content/uploads/2015/02/barcode-3.png" },
+    { url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png" },
   ]);
 
   // CANVAS ELEMENTS, please add all elements you want to render in the canvas
@@ -120,9 +137,9 @@ export default function App() {
       draggable: false,
       state: {
         isDragging: false,
-        x: 100,
+        x: 200,
         y: 50,
-        text: "Draggable Text 2",
+        text: "Not Draggable Text 2",
         fontFamily: "Verdana",
         fontSize: 40,
       },
@@ -139,27 +156,53 @@ export default function App() {
         height: 250,
         url: "https://cdn130.picsart.com/280172553005211.png",
       },
-
+    },
+    {
+      id: "5",
+      type: "image",
+      draggable: true,
+      isDynamic: true,
+      state: {
+        isDragging: false,
+        x: 500,
+        y: 600,
+        width: 300,
+        height: 100,
+        url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png",
+      },
     }
   ]);
 
+  // refreshes the selected element when the canvas elements change
+  useEffect(() => {
+    if (selectedElement) {
+      const element = canvasElements.find(
+        (element) => element.id === selectedElement.id
+      );
+      setSelectedElement(element);
+    }
+  }, [selectedElement, canvasElements]);
+
   // This function is called when the user changes the size of an element
   // updates the width and height of the element or any other element attributes
-  const onChange = (element, newAttrs) => {
-    setCanvasElements((prevState) => {
-      const index = prevState.findIndex(
-        (item) => item.id === element.id
-      );
-      const newElements = [...prevState];
-      newElements[index] = {
-        ...newElements[index],
-        state: {
-          ...newElements[index].state,
-          ...newAttrs,
-        },
-      };
-      return newElements;
-    });
+  const onChange = (element, stateAttrs, mainAttrs = {}) => {
+    if (element) {
+      setCanvasElements((prevState) => {
+        const index = prevState.findIndex(
+          (item) => item.id === element.id
+        );
+        const newElements = [...prevState];
+        newElements[index] = {
+          ...newElements[index],
+          ...mainAttrs,
+          state: {
+            ...newElements[index].state,
+            ...stateAttrs,
+          },
+        };
+        return newElements;
+      });
+    }
   }
 
   // This function is called when the user starts dragging an element
@@ -184,9 +227,6 @@ export default function App() {
   // sets the selectedElement state to the element that was clicked
   const onSelect = (element) => {
     setSelectedElement(element);
-    onChange(element, {
-      selected: true,
-    });
   }
 
   // This function is called to render the canvas elements
@@ -232,13 +272,14 @@ export default function App() {
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
       setSelectedElement(null);
-      canvasElements.forEach((element) => {
-        onChange(element, {
-          selected: false,
-        });
-      });
     }
   };
+
+  const handleDynamicElement = (element, checked) => {
+    onChange(element, {}, {
+      isDynamic: checked,
+    });
+  }
 
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
@@ -249,11 +290,16 @@ export default function App() {
             setFontFamily={setFontFamily}
             imageList={imageList}
             setImageList={setImageList}
+            barcodeImageList={barcodeImageList}
+            setBarcodeImageList={setBarcodeImageList}
             setCanvasElements={setCanvasElements}
           />
         </div>
         <div className="col-span-12 md:col-span-8">
-          <ToolbarLabel />
+          <ToolbarLabel 
+            selectedElement={selectedElement}
+            handleDynamicElement={handleDynamicElement}
+          />
           {/* A partir de aqui Canvas*/}
           <div
             className="containerCanvas"
