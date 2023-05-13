@@ -51,13 +51,12 @@ export default function ColorPalette({ initialColor, onColorChange }) {
           </div>
           <div className="col-span-3">
             <TwitterPicker
-              width="250px"
+              width="210px"
               colors={[
                 "#EB144C",
                 "#F78DA7",
                 "#0693E3",
                 "#00D084",
-                "#FCB900",
                 "#9900EF",
               ]}
               triangle="hide"
