@@ -1,6 +1,7 @@
 import { React, Fragment, useRef, useState, useEffect } from "react";
 import { Stage, Layer, Rect, Text, Image } from "react-konva";
 import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
+import jsPDF from "jspdf";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
 import { LoadImage } from "./components/image-editor";
@@ -41,12 +42,12 @@ const FONT_FAMILY_LIST = [
   { name: 'Verdana', value: 'Verdana' },
 ];
 
-
 export default function App() {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] = useState(null);
+  const [selectedColor, setSelectedColor] = useState("#ffffff");
 
   useEffect(() => {
     function handleResize() {
@@ -84,11 +85,43 @@ export default function App() {
     } 
   }, [selectedElement]);
 
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
-
   function handleColorChange(newColor) {
     setSelectedColor(newColor);
   }
+
+  const handleExportClick = (format) => {
+    const mimeType = format === "png" ? "image/png" : "image/jpeg";
+    const extension = format === "png" ? "png" : "jpg";
+
+    const stageEx = stageRef.current;
+    const dataURL = stageEx.toDataURL({
+      pixelRatio: window.devicePixelRatio,
+      mimeType: mimeType,
+      quality: 1,
+    });
+
+    const link = document.createElement("a");
+    link.download = `label.${extension}`;
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadPDF = () => {
+    const stageEx = stageRef.current;
+    const dataURL = stageEx.toDataURL({
+      pixelRatio: window.devicePixelRatio,
+      mimeType: "image/png",
+      quality: 1,
+    });
+    const doc = new jsPDF("landscape", "px", [
+      stageEx.width(),
+      stageEx.height(),
+    ]);
+    doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
+    doc.save("label.pdf");
+  };
 
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
 
@@ -170,7 +203,7 @@ export default function App() {
         height: 100,
         url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png",
       },
-    }
+    },
   ]);
 
   // refreshes the selected element when the canvas elements change
@@ -203,7 +236,7 @@ export default function App() {
         return newElements;
       });
     }
-  }
+  };
 
   // This function is called when the user starts dragging an element
   // sets the element state to isDragging = true
@@ -211,7 +244,7 @@ export default function App() {
     onChange(element, {
       isDragging: true,
     });
-  }
+  };
 
   // This function is called when the user stops dragging an element
   // sets the element state to isDragging = false and updates the x and y coordinates
@@ -221,13 +254,13 @@ export default function App() {
       x: e.target.x(),
       y: e.target.y(),
     });
-  }
+  };
 
   // This function is called when the user clicks on an element
   // sets the selectedElement state to the element that was clicked
   const onSelect = (element) => {
     setSelectedElement(element);
-  }
+  };
 
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
@@ -244,7 +277,7 @@ export default function App() {
           onDragStart={() => onDragStart(element)}
           onDragEnd={(e) => onDragEnd(e, element)}
         />
-      )
+      );
     }
     if (element.type === "image") {
       return (
@@ -262,10 +295,10 @@ export default function App() {
           onSelect={() => onSelect(element)}
           onChange={(newAttrs) => onChange(element, newAttrs)}
         />
-      )
+      );
     }
     return <></>;
-  }
+  };
 
   // deselect when clicked on empty area
   const handleDeselectElement = (e) => {
@@ -329,6 +362,11 @@ export default function App() {
                 ))}
               </Layer>
             </Stage>
+            <button onClick={downloadPDF}>Descargar PDF</button>
+            <select onChange={(e) => handleExportClick(e.target.value)}>
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+            </select>
 
             {/* A partir de aqui Zoom*/}
             <div className="flex justify-center z-10 -mt-20 md:-mt-11">
