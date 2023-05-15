@@ -8,6 +8,7 @@ import {
   CubeIcon,
   DeviceMobileIcon,
   ColorSwatchIcon,
+  TagIcon,
 } from "@heroicons/react/outline";
 import ColorPalette from "./color-palette";
 import TextEditor from "./text-editor";
@@ -60,7 +61,7 @@ export default function SidePanel({
     {
       label: "Fields",
       content: <FieldsEditor fields={fields}/>,
-      icon: UploadIcon,
+      icon: TagIcon,
     },
     {
       label: "Background",
