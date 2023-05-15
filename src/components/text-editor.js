@@ -95,7 +95,7 @@ export default function TextEditor ({fontFamily, setFontFamily}){
         <div>
           <div>
             <label htmlFor="font-family-select" className="text-ft-blue-300" >Font: </label>
-            <select id="font-family-select"   className="max-w-lg block focus:ring-yellow-400 focus:border-yellow-400 w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" value={fontFamily} onChange={handleFontFamilyChange}>
+            <select id="font-family-select" className="py-2 max-w-lg block w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" value={fontFamily} onChange={handleFontFamilyChange}>
             {allFonts.map((font) => (
                 <option key={font.value} value={font.value}>
                   {font.name}
@@ -104,7 +104,7 @@ export default function TextEditor ({fontFamily, setFontFamily}){
             </select>
           </div>
             <div className="flex justify-center w-full mt-8">
-              <button className=" bg-ft-blue-300 text-white px-4 py-2 rounded-md" onClick={() => handleView('uploadFont')}>Upload new font</button>
+              <button className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold py-2 px-4" onClick={() => handleView('uploadFont')}>Upload new font</button>
             </div> 
           </div>
       ) : (
@@ -113,17 +113,23 @@ export default function TextEditor ({fontFamily, setFontFamily}){
           <div>
             <form onSubmit={handleSubmit}>
               <label htmlFor="new-font-name"  className="text-ft-blue-300" >Font name: </label>
-              <input id="new-font-name" type="text" className="max-w-lg block focus:ring-yellow-400 focus:border-yellow-400 w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" value={newFontName} onChange={handleNewFontNameChange} />
+              <input id="new-font-name" type="text" className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md" value={newFontName} onChange={handleNewFontNameChange} />
               {error && (
                 <p className="text-red-600 text-sm mt-1">This field is required</p>
               )}
               <br />
               <label htmlFor="new-font-file" className="text-ft-blue-300" >Font file: </label>
-              <input id="new-font-file" type="file"  accept=".ttf, .otf" onChange={handleNewFontFileChange} />
+                <label className="block text-gray-700 text-sm font-bold mb-4 mt-2 pb-4">
+                Upload Font:
+                <input type="file" className="hidden" accept=".ttf, .otf" onChange={handleNewFontFileChange} />
+                <span className="ml-2 inline-block bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg cursor-pointer">
+                    Choose file
+                </span>
+            </label>
                 <br />
-                <div className="flex justify-start w-full mt-8">
-                <button  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-ft-blue-300 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ft-blue-300" type="submit">Add Font</button>
-                <button  className="bg-white px-4 mx-2 border border-[#3c5865] rounded-md shadow-sm text-sm font-medium text-[#3c5865] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3c5865]" onClick={() => handleView('fontList')} >Cancel</button>
+                <div className="flex justify-start w-full">
+                <button  className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold py-2 px-4" type="submit">Add Font</button>
+                <button  className="bg-white px-4 mx-2 border border-[#3c5865] rounded-md shadow-sm text-sm font-bold text-[#3c5865] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3c5865]" onClick={() => handleView('fontList')} >Cancel</button>
                 </div>
             </form>
           </div>
