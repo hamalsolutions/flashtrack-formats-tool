@@ -41,6 +41,19 @@ const FONT_FAMILY_LIST = [
   { name: 'Verdana', value: 'Verdana' },
 ];
 
+const fields = [
+  { name: "QTY", description: "QTY" },
+  { name: "COLOR", description: "COLOR" },
+  { name: "PCS", description: "PSC" },
+  { name: "SIZE", description: "SIZE" },
+  { name: "DESCRIPTION", description: "DESCRIPTION" },
+  { name: "PRICE", description: "PRICE" },
+  { name: "UPC", description: "UPC" },
+  { name: "DEPT", description: "DEPT" },
+  { name: "CLASS", description: "CLASS" },
+  { name: "STYLE", description: "STYLE" },
+];
+
 
 export default function App() {
   const containerRef = useRef(null);
@@ -293,6 +306,7 @@ export default function App() {
             barcodeImageList={barcodeImageList}
             setBarcodeImageList={setBarcodeImageList}
             setCanvasElements={setCanvasElements}
+            fields = {fields}
           />
         </div>
         <div className="col-span-12 md:col-span-8">

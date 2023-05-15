@@ -8,10 +8,12 @@ import {
   CubeIcon,
   DeviceMobileIcon,
   ColorSwatchIcon,
+  TagIcon,
 } from "@heroicons/react/outline";
 import ColorPalette from "./color-palette";
 import TextEditor from "./text-editor";
 import ImageEditor from "./image-editor";
+import FieldsEditor from "./fields-editor";
 
 export default function SidePanel({
   onColorChange,
@@ -21,6 +23,7 @@ export default function SidePanel({
   barcodeImageList,
   setBarcodeImageList,
   setCanvasElements,
+  fields,
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -60,9 +63,9 @@ export default function SidePanel({
       icon: CubeIcon,
     },
     {
-      label: "Upload",
-      content: "Aqui se podran subir archivos o imagenes",
-      icon: UploadIcon,
+      label: "Fields",
+      content: <FieldsEditor fields={fields}/>,
+      icon: TagIcon,
     },
     {
       label: "Background",
