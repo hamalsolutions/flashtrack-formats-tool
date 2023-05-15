@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   PencilIcon,
   ArrowsExpandIcon,
@@ -9,15 +9,15 @@ import {
   DeviceMobileIcon,
   ColorSwatchIcon,
   TagIcon,
-} from "@heroicons/react/outline";
-import ColorPalette from "./color-palette";
-import TextEditor from "./text-editor";
-import ImageEditor from "./image-editor";
-import FieldsEditor from "./fields-editor";
+} from '@heroicons/react/outline';
+import ColorPalette from './color-palette';
+import TextEditor from './text-editor';
+import ImageEditor from './image-editor';
+import FieldsEditor from './fields-editor';
 
 export default function SidePanel({
   onColorChange,
-  setFontFamily, 
+  setFontFamily,
   imageList,
   setImageList,
   barcodeImageList,
@@ -28,7 +28,7 @@ export default function SidePanel({
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
 
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
+  const [selectedColor, setSelectedColor] = useState('#ffffff');
 
   function handleColorChange(newColor) {
     setSelectedColor(newColor);
@@ -37,38 +37,40 @@ export default function SidePanel({
 
   const tabs = [
     {
-      label: "Templates",
-      content: "Aqui se mostraran los Templates",
+      label: 'Templates',
+      content: 'Aqui se mostraran los Templates',
       icon: DeviceMobileIcon,
     },
     {
-      label: "Text",
+      label: 'Text',
       content: <TextEditor setFontFamily={setFontFamily} />,
       icon: PencilIcon,
     },
     {
-      label: "Images",
-      content: <ImageEditor 
-        imageList={imageList} 
-        setImageList={setImageList} 
-        barcodeImageList={barcodeImageList}
-        setBarcodeImageList={setBarcodeImageList}
-        setCanvasElements={setCanvasElements}
-      />,
+      label: 'Images',
+      content: (
+        <ImageEditor
+          imageList={imageList}
+          setImageList={setImageList}
+          barcodeImageList={barcodeImageList}
+          setBarcodeImageList={setBarcodeImageList}
+          setCanvasElements={setCanvasElements}
+        />
+      ),
       icon: PhotographIcon,
     },
-    {
+    /* {
       label: "Elements",
       content: "Aqui se mostraran elementos como formas",
       icon: CubeIcon,
-    },
+    },*/
     {
-      label: "Fields",
-      content: <FieldsEditor fields={fields}/>,
+      label: 'Fields',
+      content: <FieldsEditor fields={fields} />,
       icon: TagIcon,
     },
     {
-      label: "Background",
+      label: 'Background',
       content: (
         <ColorPalette
           initialColor={selectedColor}
@@ -77,7 +79,7 @@ export default function SidePanel({
       ),
       icon: ColorSwatchIcon,
     },
-    {
+    /* {
       label: "Layers",
       content: "Aqui se indicaran los elementos que hay en el lienzo",
       icon: CollectionIcon,
@@ -86,7 +88,7 @@ export default function SidePanel({
       label: "Resize",
       content: "Aqui se indicara el tamaño de la etiqueta",
       icon: ArrowsExpandIcon,
-    },
+    },*/
   ];
 
   const handleOptionClick = (option) => {
@@ -110,8 +112,8 @@ export default function SidePanel({
                     key={index}
                     className={`${
                       activeTab === index
-                        ? "bg-gray-200 text-ft-blue-300"
-                        : "bg-white text-ft-blue-300"
+                        ? 'bg-gray-200 text-ft-blue-300'
+                        : 'bg-white text-ft-blue-300'
                     } p-4 border-b border-x border-gray-300 focus:outline-none hover:bg-gray-200 text-sm`}
                     onClick={() => setActiveTab(index)}
                   >
@@ -131,7 +133,7 @@ export default function SidePanel({
                 <div
                   key={index}
                   className={`${
-                    activeTab === index ? "block" : "hidden"
+                    activeTab === index ? 'block' : 'hidden'
                   } p-4 bg-white border-l border-r border-b`}
                 >
                   {tab.content}
