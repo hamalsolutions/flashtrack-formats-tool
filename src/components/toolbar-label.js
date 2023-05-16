@@ -20,6 +20,7 @@ export default function ToolbarLabel({
   selectedOption,
 }) {
   const [checked, setChecked] = useState(false);
+  const [formatName, setFormatName] = useState('newlabel');
   const isSelected = !!selectedElement;
 
   useEffect(() => {
@@ -76,7 +77,16 @@ export default function ToolbarLabel({
                     />
                   </button>
                 </div>
-                <div className="md:ml-6 md:flex md:items-center md:space-x-4"></div>
+                <div className="md:ml-6 md:flex md:items-center md:space-x-4">
+                  <input
+                    type="text"
+                    name="label-name"
+                    id="label-name"
+                    className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
+                    defaultValue={formatName}
+                    onChange={(e) => setFormatName(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="flex items-center">
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center ">
@@ -133,7 +143,7 @@ export default function ToolbarLabel({
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">
                   <select
                     value={selectedOption}
-                    onChange={(e) => handleExportClick(e.target.value)}
+                    onChange={(e) => handleExportClick(e.target.value, formatName)}
                     className="relative inline-flex items-center gap-x-1.5 rounded-md border px-3 py-2 text-sm font-semibold text-ft-blue-300 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
                     <option value="" hidden>
