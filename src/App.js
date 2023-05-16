@@ -4,6 +4,7 @@ import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
 import { LoadImage } from "./components/image-editor";
+import { LoadText } from './components/text-editor';
 import jsPDF from "jspdf";
 import barcode1 from "./images/barcode1.png";
 import barcode2 from "./images/barcode2.jpg";
@@ -224,7 +225,7 @@ export default function App() {
       },
     },
     {
-      id: "4",
+      id: "3",
       type: "image",
       draggable: true,
       state: {
@@ -237,7 +238,7 @@ export default function App() {
       },
     },
     {
-      id: "5",
+      id: "4",
       type: "image",
       draggable: true,
       isDynamic: true,
@@ -294,7 +295,7 @@ export default function App() {
   // sets the element state to isDragging = false and updates the x and y coordinates
   const onDragEnd = (e, element) => {
     onChange(element, {
-      isDragging: false,
+      //isDragging: false,
       x: e.target.x(),
       y: e.target.y(),
     });
@@ -305,21 +306,23 @@ export default function App() {
   const onSelect = (element) => {
     setSelectedElement(element);
   };
-
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
     if (element.type === "text") {
       return (
-        <Text
+        <LoadText
           text={element.state.text}
           x={element.state.x}
           y={element.state.y}
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           draggable={element.draggable}
-          fill={element.state.isDragging ? "green" : "black"}
+          fill={element.fill}
           onDragStart={() => onDragStart(element)}
           onDragEnd={(e) => onDragEnd(e, element)}
+          onSelect={() => onSelect(element)}
+          isSelected={selectedElement && selectedElement.id === element.id}
+          onChange={(newAttrs) => onChange(element, newAttrs)}
         />
       );
     }
@@ -368,6 +371,7 @@ export default function App() {
         <div className="md:col-span-4">
           <SidePanel
             onColorChange={handleColorChange}
+            fontFamily={fontFamily}
             setFontFamily={setFontFamily}
             imageList={imageList}
             setImageList={setImageList}
