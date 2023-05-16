@@ -4,6 +4,19 @@ import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
 import { LoadImage } from "./components/image-editor";
+import jsPDF from "jspdf";
+import barcode1 from "./images/barcode1.png";
+import barcode2 from "./images/barcode2.jpg";
+import image1 from "./images/example.png";
+import picsumid1 from "./images/1.jpg";
+import picsumid2 from "./images/2.jpg";
+import picsumid3 from "./images/3.jpg";
+import picsumid4 from "./images/4.jpg";
+import picsumid5 from "./images/5.jpg";
+import picsumid6 from "./images/6.jpg";
+import picsumid7 from "./images/7.jpg";
+import picsumid8 from "./images/8.jpg";
+import picsumid9 from "./images/9.jpg";
 
 export const Background = ({ height, width, color }) => {
   let newWidth = 0;
@@ -108,32 +121,30 @@ export default function App() {
 
   // we must load images from database to this state
   const [imageList, setImageList] = useState([
-    { url: "https://picsum.photos/200/300?id=1" },
-    { url: "https://picsum.photos/200/300?id=2" },
-    { url: "https://picsum.photos/200/300?id=3" },
-    { url: "https://picsum.photos/200/300?id=4" },
-    { url: "https://picsum.photos/200/300?id=5" },
-    { url: "https://picsum.photos/200/300?id=6" },
-    { url: "https://picsum.photos/200/300?id=7" },
-    { url: "https://picsum.photos/200/300?id=8" },
-    { url: "https://picsum.photos/200/300?id=9" },
-    { url: "https://picsum.photos/200/300?id=0" },
-    { url: "https://picsum.photos/200/300?id=11" },
-    { url: "https://picsum.photos/200/300?id=12" },
-    { url: "https://picsum.photos/200/300?id=13" },
+    { url: picsumid1 },
+    { url: picsumid2 },
+    { url: picsumid3 },
+    { url: picsumid4 },
+    { url: picsumid5 },
+    { url: picsumid6 },
+    { url: picsumid7 },
+    { url: picsumid8 },
+    { url: picsumid9 },
   ]);
 
   // we must load images from database to this state
   const [barcodeImageList, setBarcodeImageList] = useState([
     {
-      url: "https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-c133d21/wp-content/uploads/2015/02/barcode-3.png",
+      url: barcode1,
     },
     {
-      url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png",
+      url: barcode2,
     },
   ]);
 
   const handleExportClick = (format) => {
+    const isMobile = window.innerWidth <= 768;
+
     if (format === "pdf") {
       const stageEx = stageRef.current;
       const dataURL = stageEx.toDataURL({
@@ -145,8 +156,22 @@ export default function App() {
         stageEx.width(),
         stageEx.height(),
       ]);
-      doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
-      doc.save("label.pdf");
+
+      if (isMobile) {
+        const mobileWidth = 300;
+        const mobileHeight = 400;
+        const scaleFactor = Math.min(
+          mobileWidth / stageEx.width(),
+          mobileHeight / stageEx.height()
+        );
+        const scaledWidth = stageEx.width() * scaleFactor;
+        const scaledHeight = stageEx.height() * scaleFactor;
+
+        doc.addImage(dataURL, "PNG", 0, 0, scaledWidth, scaledHeight);
+      } else {
+        doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
+      }
+      doc.save("newlabel.pdf");
     } else {
       const mimeType = format === "png" ? "image/png" : "image/jpeg";
       const extension = format === "png" ? "png" : "jpg";
@@ -159,7 +184,7 @@ export default function App() {
       });
 
       const link = document.createElement("a");
-      link.download = `label.${extension}`;
+      link.download = `newlabel.${extension}`;
       link.href = dataURL;
       document.body.appendChild(link);
       link.click();
@@ -206,7 +231,7 @@ export default function App() {
         y: 200,
         width: 300,
         height: 250,
-        url: "https://cdn130.picsart.com/280172553005211.png",
+        url: image1,
       },
     },
     {
@@ -220,7 +245,7 @@ export default function App() {
         y: 600,
         width: 300,
         height: 100,
-        url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png",
+        url: barcode1,
       },
     },
   ]);
