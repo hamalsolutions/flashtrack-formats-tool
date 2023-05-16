@@ -1,7 +1,6 @@
 import { React, Fragment, useRef, useState, useEffect } from "react";
 import { Stage, Layer, Rect, Text, Image } from "react-konva";
 import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
-import jsPDF from "jspdf";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
 import { LoadImage } from "./components/image-editor";
@@ -37,9 +36,22 @@ export const Background = ({ height, width, color }) => {
 };
 
 const FONT_FAMILY_LIST = [
-  { name: 'Roboto', value: 'Roboto' },
-  { name: 'Arial', value: 'Arial' },
-  { name: 'Verdana', value: 'Verdana' },
+  { name: "Roboto", value: "Roboto" },
+  { name: "Arial", value: "Arial" },
+  { name: "Verdana", value: "Verdana" },
+];
+
+const fields = [
+  { name: "QTY", description: "QTY" },
+  { name: "COLOR", description: "COLOR" },
+  { name: "PCS", description: "PSC" },
+  { name: "SIZE", description: "SIZE" },
+  { name: "DESCRIPTION", description: "DESCRIPTION" },
+  { name: "PRICE", description: "PRICE" },
+  { name: "UPC", description: "UPC" },
+  { name: "DEPT", description: "DEPT" },
+  { name: "CLASS", description: "CLASS" },
+  { name: "STYLE", description: "STYLE" },
 ];
 
 export default function App() {
@@ -69,7 +81,10 @@ export default function App() {
   // listens to the key delete to remove the selected element
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if ((event.key === "Delete" || event.key === "Backspace") && selectedElement) {
+      if (
+        (event.key === "Delete" || event.key === "Backspace") &&
+        selectedElement
+      ) {
         const newElements = canvasElements.filter(
           (element) => element.id !== selectedElement.id
         );
@@ -78,11 +93,11 @@ export default function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown)
-  
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    } 
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [selectedElement]);
 
   function handleColorChange(newColor) {
@@ -110,8 +125,12 @@ export default function App() {
 
   // we must load images from database to this state
   const [barcodeImageList, setBarcodeImageList] = useState([
-    { url: "https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-c133d21/wp-content/uploads/2015/02/barcode-3.png" },
-    { url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png" },
+    {
+      url: "https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-c133d21/wp-content/uploads/2015/02/barcode-3.png",
+    },
+    {
+      url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png",
+    },
   ]);
 
   const handleExportClick = (format) => {
@@ -221,9 +240,7 @@ export default function App() {
   const onChange = (element, stateAttrs, mainAttrs = {}) => {
     if (element) {
       setCanvasElements((prevState) => {
-        const index = prevState.findIndex(
-          (item) => item.id === element.id
-        );
+        const index = prevState.findIndex((item) => item.id === element.id);
         const newElements = [...prevState];
         newElements[index] = {
           ...newElements[index],
@@ -309,10 +326,14 @@ export default function App() {
   };
 
   const handleDynamicElement = (element, checked) => {
-    onChange(element, {}, {
-      isDynamic: checked,
-    });
-  }
+    onChange(
+      element,
+      {},
+      {
+        isDynamic: checked,
+      }
+    );
+  };
 
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
@@ -326,12 +347,16 @@ export default function App() {
             barcodeImageList={barcodeImageList}
             setBarcodeImageList={setBarcodeImageList}
             setCanvasElements={setCanvasElements}
+            fields={fields}
           />
         </div>
         <div className="col-span-12 md:col-span-8">
-          <ToolbarLabel 
+          <ToolbarLabel
             selectedElement={selectedElement}
             handleDynamicElement={handleDynamicElement}
+            canvasElements={canvasElements}
+            setCanvasElements={setCanvasElements}
+            setSelectedElement={setSelectedElement}
           />
           {/* A partir de aqui Canvas*/}
           <div
@@ -346,7 +371,6 @@ export default function App() {
               onMouseDown={handleDeselectElement}
               onTouchStart={handleDeselectElement}
               ref={stageRef}
-              
             >
               <Layer>
                 <Background
@@ -370,6 +394,7 @@ export default function App() {
             </select>
 
             {/* A partir de aqui Zoom*/}
+            {/* 
             <div className="flex justify-center z-10 -mt-20 md:-mt-11">
               <span className="isolate inline-flex rounded-md shadow-sm">
                 <button
@@ -389,6 +414,7 @@ export default function App() {
                 </button>
               </span>
             </div>
+            */}
           </div>
         </div>
       </div>

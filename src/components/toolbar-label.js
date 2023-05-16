@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Disclosure } from "@headlessui/react";
+import { useState, useEffect } from 'react';
+import { Disclosure } from '@headlessui/react';
 import {
   TrashIcon,
   DownloadIcon,
@@ -8,19 +8,20 @@ import {
   DuplicateIcon,
   LockOpenIcon,
   TemplateIcon,
-} from "@heroicons/react/outline";
+} from '@heroicons/react/outline';
 
 export default function ToolbarLabel({
   selectedElement,
-  handleDynamicElement
+  handleDynamicElement,
+  canvasElements,
+  setCanvasElements,
+  setSelectedElement,
 }) {
   const [checked, setChecked] = useState(false);
   const isSelected = !!selectedElement;
 
   useEffect(() => {
-    const isChecked = (isSelected) 
-      ? selectedElement.isDynamic || false 
-      : false;
+    const isChecked = isSelected ? selectedElement.isDynamic || false : false;
     setChecked(isChecked);
   }, [selectedElement]);
 
@@ -28,8 +29,19 @@ export default function ToolbarLabel({
     if (selectedElement) {
       handleDynamicElement(selectedElement, e.target.checked);
       setChecked(e.target.checked);
-    } {
+    }
+    {
       setChecked(false);
+    }
+  };
+
+  const deleteElementSelected = () => {
+    if (selectedElement) {
+      const elements = canvasElements.filter(
+        (element) => element.id !== selectedElement.id
+      );
+      setCanvasElements(elements);
+      setSelectedElement(null);
     }
   };
 
@@ -67,16 +79,17 @@ export default function ToolbarLabel({
               <div className="flex items-center">
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center ">
                   <label className="inline-flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="rounded-full border-gray-300 text-ft-blue-300 shadow-sm focus:border-ft-blue-300 focus:ring focus:ring-ft-blue-200 focus:ring-opacity-50" 
-                      onClick={markCheckbox} 
+                    <input
+                      type="checkbox"
+                      className="rounded-full border-gray-300 text-ft-blue-300 shadow-sm focus:border-ft-blue-300 focus:ring focus:ring-ft-blue-200 focus:ring-opacity-50"
+                      onClick={markCheckbox}
                       checked={checked}
                       disabled={!isSelected}
                     />
                     <span className="ml-2 text-gray-700">Mark as Dynamic</span>
                   </label>
                 </div>
+                {/* 
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">
                   <button
                     type="button"
@@ -104,9 +117,11 @@ export default function ToolbarLabel({
                     <DuplicateIcon className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
+                */}
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">
                   <button
                     type="button"
+                    onClick={deleteElementSelected}
                     className="rounded-full bg-white p-1 text-ft-blue-300 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                   >
                     <span className="sr-only">Delete</span>
