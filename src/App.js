@@ -142,9 +142,11 @@ export default function App() {
     },
   ]);
 
+  const [selectedOption, setSelectedOption] = useState("Download as");
+
   const handleExportClick = (format) => {
     const isMobile = window.innerWidth <= 768;
-
+    setSelectedOption("Download as");
     if (format === "pdf") {
       const stageEx = stageRef.current;
       const dataURL = stageEx.toDataURL({
@@ -382,6 +384,8 @@ export default function App() {
             canvasElements={canvasElements}
             setCanvasElements={setCanvasElements}
             setSelectedElement={setSelectedElement}
+            handleExportClick={handleExportClick}
+            selectedOption={selectedOption}
           />
           {/* A partir de aqui Canvas*/}
           <div
@@ -411,12 +415,6 @@ export default function App() {
                 ))}
               </Layer>
             </Stage>
-
-            <select onChange={(e) => handleExportClick(e.target.value)}>
-              <option value="png">PNG</option>
-              <option value="jpg">JPG</option>
-              <option value="pdf">PDF</option>
-            </select>
 
             {/* A partir de aqui Zoom*/}
             {/* 
