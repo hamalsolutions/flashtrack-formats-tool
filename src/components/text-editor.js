@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment, useRef } from 'react';
+import { Transformer, Text } from 'react-konva';
+import { SketchPicker } from "react-color";
+import { ColorSwatchIcon, XIcon } from "@heroicons/react/outline";
 
 const FONT_FAMILY_LIST = [
   { name: 'Roboto', value: 'Roboto' },
@@ -10,13 +13,120 @@ const FONT_FAMILY_LIST = [
   { name: 'Helvetica', value: 'Helvetica' },
 ];
 
-export default function TextEditor ({fontFamily, setFontFamily}){
+const FONT_SIZE_LIST = [
+  { value: 8 },
+  { value: 9 },
+  { value: 10 },
+  { value: 11 },
+  { value: 12 },
+  { value: 14 },
+  { value: 18 },
+  { value: 24 },
+  { value: 30 },
+  { value: 36 },
+  { value: 48 },
+  { value: 60 },
+  { value: 72 },
+  { value: 96 },
+];
+
+export const LoadText = ({
+  text,
+  id,
+  x,
+  y,
+  width,
+  height,
+  draggable,
+  onDragStart,
+  onDragEnd,
+  isSelected,
+  onSelect,
+  onChange,
+  fontFamily,
+  fontSize,
+  fill
+}) => {
+  const textRef = useRef();
+  const trRef = useRef();
+  
+  useEffect(() => {
+      if (isSelected) {
+          trRef.current.nodes([textRef.current]);
+          trRef.current.getLayer().batchDraw();
+      }
+  }, [isSelected]);
+  
+  return (
+      <Fragment>
+          <Text
+              ref={textRef}
+              text={text}
+              x={x}
+              y={y}
+              fontFamily={fontFamily}
+              fontSize={fontSize}
+              fill={fill}
+              width={width}
+              height={height}
+              draggable={draggable}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              id={id}
+              onClick={onSelect}
+              onTap={onSelect}
+              onTransformEnd={(e) => {
+                const node = textRef.current;
+                const scaleX = node.scaleX();
+                const scaleY = node.scaleY();
+                node.scaleX(1);
+                node.scaleY(1);
+                onChange({
+                  x: node.x(),
+                  y: node.y(),
+                  width: Math.max(5, node.width() * scaleX),
+                  height: Math.max(node.height() * scaleY),
+                });
+              }}
+              onTransform={() => {
+                const node = textRef.current;
+                node.setAttrs({
+                  width: Math.max(node.width() * node.scaleX(), 20),
+                  height: Math.max(node.height() * node.scaleY(), 20),
+                  scaleX: 1,
+                  scaleY: 1,
+                });
+              }}
+          />
+          {isSelected && (
+            <Transformer
+              ref={trRef}
+              boundBoxFunc={(oldBox, newBox) => {
+                // limit resize
+                if (newBox.width < 20) {
+                  return oldBox;
+                }
+                return newBox;
+              }}
+            />
+          )}
+      </Fragment>
+  );
+};
+
+export default function TextEditor ({fontFamily, setFontFamily, setCanvasElements}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
-  const [newFontName, setNewFontName] = useState('');
+  const [newFontName, setNewFontName] = useState(fontFamily);
   const [newFontFile, setNewFontFile] = useState(null);
   const [customFonts, setCustomFonts] = useState([]); // Lista de fuentes personalizadas
+  const [textContent, setTextContent] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
+  const [color, setColor] = useState("#000000");
+  const [fontSize, setFontSize] = useState(12);
   const [error, setError] = useState(false);
+
+  const button = document.getElementById("add-text-button");
 
   useEffect(() => {
     // Carga las fuentes personalizadas guardadas en el localStorage al iniciar la aplicación
@@ -64,6 +174,33 @@ export default function TextEditor ({fontFamily, setFontFamily}){
     setError(false);    
   }
 
+  const handleTextContent = (event) => {
+    setTextContent(event.target.value);
+  };
+
+  const handleNewText = () => {
+    if (textContent.length !== 0) {
+      addTextToCanvas();
+      setTextContent("");
+    }
+  }
+
+  const handleEnterToAddText = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      button.click();
+      setTextContent("");
+    }
+  }
+
+  function handleColorChange(newColor) {
+    setColor(newColor.hex);
+  }
+
+  const handleTextSizeSelect = (event) => {
+    setFontSize(parseInt(event.target.value));
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault();
     
@@ -89,26 +226,66 @@ export default function TextEditor ({fontFamily, setFontFamily}){
 
   const allFonts = [...FONT_FAMILY_LIST, ...customFonts];
 
+  const addTextToCanvas = () => {
+    setCanvasElements((prev) => {
+        const newElement = {
+            id: Date.now().toString(),
+            type: "text",
+            draggable: true,
+            isDynamic: true,
+            fill: color,
+            state: {
+                text: textContent,
+                x: 200,
+                y: 200,
+                fontFamily: fontFamily,
+                fontSize: fontSize,
+              }
+        };
+        return [...prev, newElement];
+    });
+  }
+
   return (
     <div>
+      <div className="flex justify-between w-full mb-4 pb-4">
+        <textarea
+          rows={4}
+          name="add-text-input"
+          id="add-text-input"
+          className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
+          placeholder={"Set text Here..."}
+          onChange={handleTextContent}
+          value={textContent}
+          onKeyDown={handleEnterToAddText}
+        />
+        <button 
+          className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold px-4" 
+          onClick={handleNewText}
+          id="add-text-button"
+          name="add-text-button"
+        >
+          Add text
+        </button>
+      </div>
       {view === 'fontList' ? (
-        <div>
+        <div className="pb-4 mb-2">
           <div>
             <label htmlFor="font-family-select" className="text-ft-blue-300" >Font: </label>
             <select id="font-family-select" className="py-2 max-w-lg block w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" value={fontFamily} onChange={handleFontFamilyChange}>
-            {allFonts.map((font) => (
+              {allFonts.map((font) => (
                 <option key={font.value} value={font.value}>
                   {font.name}
                 </option>
               ))}
             </select>
           </div>
-            <div className="flex justify-center w-full mt-8">
+            <div className="flex justify-left w-full mt-8">
               <button className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold py-2 px-4" onClick={() => handleView('uploadFont')}>Upload new font</button>
             </div> 
-          </div>
+        </div>
       ) : (
-        <div>
+        <div className="pb-4 mb-2">
           <h2 className="text-ft-blue-300">Upload new font</h2>
           <div>
             <form onSubmit={handleSubmit}>
@@ -120,10 +297,10 @@ export default function TextEditor ({fontFamily, setFontFamily}){
               <br />
               <label htmlFor="new-font-file" className="text-ft-blue-300" >Font file: </label>
                 <label className="block text-gray-700 text-sm font-bold mb-4 mt-2 pb-4">
-                Upload Font:
+                  Upload Font:
                 <input type="file" className="hidden" accept=".ttf, .otf" onChange={handleNewFontFileChange} />
                 <span className="ml-2 inline-block bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg cursor-pointer">
-                    Choose file
+                  Choose file
                 </span>
             </label>
                 <br />
@@ -135,6 +312,50 @@ export default function TextEditor ({fontFamily, setFontFamily}){
           </div>
         </div>
       )}
+      <div>
+        <div className="mt-4">
+          <div className="flex mb-4">
+            <p>Font size: </p>
+            <select className="ml-2 shadow-sm" onChange={handleTextSizeSelect}>
+              {FONT_SIZE_LIST.map((fontSize, index) => (
+                <option key={index} value={fontSize.value}>
+                  {fontSize.value}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className='flex'>
+            <button
+              className="flex justify-between bg-gray-200 px-4 py-4 text-white rounded-md"
+              onClick={() => setShowPicker(!showPicker)}
+            >
+              <p className='mx-2'>Font Color</p>
+              {showPicker ? (
+                <XIcon
+                className="h-6 w-6 text-ft-blue-300 "
+                aria-hidden="true"
+                />
+                ) : (
+                  <ColorSwatchIcon
+                  className="h-6 w-6 text-ft-blue-300"
+                  aria-hidden="true"
+                  />
+                  )}
+            </button>
+            <input 
+              className="mx-2 px-2"
+              type="color" 
+              value={color}
+              disabled
+            />  
+          </div>
+          {showPicker && (
+            <div className="absolute top-0 left-0 z-10 mt-10">
+              <SketchPicker color={color} onChange={handleColorChange} />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

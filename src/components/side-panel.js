@@ -17,6 +17,7 @@ import FieldsEditor from './fields-editor';
 
 export default function SidePanel({
   onColorChange,
+  fontFamily,
   setFontFamily,
   imageList,
   setImageList,
@@ -27,7 +28,6 @@ export default function SidePanel({
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-
   const [selectedColor, setSelectedColor] = useState('#ffffff');
 
   function handleColorChange(newColor) {
@@ -43,7 +43,12 @@ export default function SidePanel({
     },
     {
       label: 'Text',
-      content: <TextEditor setFontFamily={setFontFamily} />,
+      content: 
+        <TextEditor 
+          setFontFamily={setFontFamily} 
+          fontFamily={fontFamily} 
+          setCanvasElements={setCanvasElements}
+        />,
       icon: PencilIcon,
     },
     {
