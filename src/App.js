@@ -89,40 +89,6 @@ export default function App() {
     setSelectedColor(newColor);
   }
 
-  const handleExportClick = (format) => {
-    const mimeType = format === "png" ? "image/png" : "image/jpeg";
-    const extension = format === "png" ? "png" : "jpg";
-
-    const stageEx = stageRef.current;
-    const dataURL = stageEx.toDataURL({
-      pixelRatio: window.devicePixelRatio,
-      mimeType: mimeType,
-      quality: 1,
-    });
-
-    const link = document.createElement("a");
-    link.download = `label.${extension}`;
-    link.href = dataURL;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const downloadPDF = () => {
-    const stageEx = stageRef.current;
-    const dataURL = stageEx.toDataURL({
-      pixelRatio: window.devicePixelRatio,
-      mimeType: "image/png",
-      quality: 1,
-    });
-    const doc = new jsPDF("landscape", "px", [
-      stageEx.width(),
-      stageEx.height(),
-    ]);
-    doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
-    doc.save("label.pdf");
-  };
-
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
 
   // we must load images from database to this state
@@ -147,6 +113,40 @@ export default function App() {
     { url: "https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-c133d21/wp-content/uploads/2015/02/barcode-3.png" },
     { url: "https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png" },
   ]);
+
+  const handleExportClick = (format) => {
+    if (format === "pdf") {
+      const stageEx = stageRef.current;
+      const dataURL = stageEx.toDataURL({
+        pixelRatio: window.devicePixelRatio,
+        mimeType: "image/png",
+        quality: 1,
+      });
+      const doc = new jsPDF("landscape", "px", [
+        stageEx.width(),
+        stageEx.height(),
+      ]);
+      doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
+      doc.save("label.pdf");
+    } else {
+      const mimeType = format === "png" ? "image/png" : "image/jpeg";
+      const extension = format === "png" ? "png" : "jpg";
+
+      const stageEx = stageRef.current;
+      const dataURL = stageEx.toDataURL({
+        pixelRatio: window.devicePixelRatio,
+        mimeType: mimeType,
+        quality: 1,
+      });
+
+      const link = document.createElement("a");
+      link.download = `label.${extension}`;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   // CANVAS ELEMENTS, please add all elements you want to render in the canvas
   // I added a text element as an example
@@ -362,10 +362,11 @@ export default function App() {
                 ))}
               </Layer>
             </Stage>
-            <button onClick={downloadPDF}>Descargar PDF</button>
+
             <select onChange={(e) => handleExportClick(e.target.value)}>
               <option value="png">PNG</option>
               <option value="jpg">JPG</option>
+              <option value="pdf">PDF</option>
             </select>
 
             {/* A partir de aqui Zoom*/}
