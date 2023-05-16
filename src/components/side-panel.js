@@ -112,14 +112,14 @@ export default function SidePanel({
                     key={index}
                     className={`${
                       activeTab === index
-                        ? 'bg-gray-200 text-ft-blue-300'
-                        : 'bg-white text-ft-blue-300'
+                        ? "bg-gray-200 text-[#3c5865]"
+                        : "bg-white text-[#3c5865]"
                     } p-4 border-b border-x border-gray-300 focus:outline-none hover:bg-gray-200 text-sm`}
                     onClick={() => setActiveTab(index)}
                   >
                     <div className="flex justify-center py-2">
                       <tab.icon
-                        className="h-6 w-6 text-ft-blue-300"
+                        className="h-6 w-6 text-[#3c5865]"
                         aria-hidden="true"
                       />
                     </div>
@@ -178,10 +178,10 @@ export default function SidePanel({
                 </h3>
                 <p className="text-gray-500">{selectedOption.content}</p>
                 <button
-                  className="bg-ft-blue-300 text-white px-4 py-2 rounded-md mt-4"
+                  className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold py-2 px-4 mt-4"
                   onClick={() => setSelectedOption(null)}
                 >
-                  Cerrar
+                  Close
                 </button>
               </div>
             </div>

@@ -1,9 +1,22 @@
-import { React, Fragment, useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Rect, Text, Image } from 'react-konva';
-import { ZoomInIcon, ZoomOutIcon } from '@heroicons/react/outline';
-import ToolbarLabel from './components/toolbar-label';
-import SidePanel from './components/side-panel';
-import { LoadImage } from './components/image-editor';
+import { React, Fragment, useRef, useState, useEffect } from "react";
+import { Stage, Layer, Rect, Text, Image } from "react-konva";
+import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
+import ToolbarLabel from "./components/toolbar-label";
+import SidePanel from "./components/side-panel";
+import { LoadImage } from "./components/image-editor";
+import jsPDF from "jspdf";
+import barcode1 from "./images/barcode1.png";
+import barcode2 from "./images/barcode2.jpg";
+import image1 from "./images/example.png";
+import picsumid1 from "./images/1.jpg";
+import picsumid2 from "./images/2.jpg";
+import picsumid3 from "./images/3.jpg";
+import picsumid4 from "./images/4.jpg";
+import picsumid5 from "./images/5.jpg";
+import picsumid6 from "./images/6.jpg";
+import picsumid7 from "./images/7.jpg";
+import picsumid8 from "./images/8.jpg";
+import picsumid9 from "./images/9.jpg";
 
 export const Background = ({ height, width, color }) => {
   let newWidth = 0;
@@ -28,7 +41,7 @@ export const Background = ({ height, width, color }) => {
       x={newX}
       y={newY}
       fill={color}
-      shadowColor={'black'}
+      shadowColor={"black"}
       shadowBlur={10}
       shadowOpacity={0.5}
     />
@@ -36,22 +49,22 @@ export const Background = ({ height, width, color }) => {
 };
 
 const FONT_FAMILY_LIST = [
-  { name: 'Roboto', value: 'Roboto' },
-  { name: 'Arial', value: 'Arial' },
-  { name: 'Verdana', value: 'Verdana' },
+  { name: "Roboto", value: "Roboto" },
+  { name: "Arial", value: "Arial" },
+  { name: "Verdana", value: "Verdana" },
 ];
 
 const fields = [
-  { name: 'QTY', description: 'QTY' },
-  { name: 'COLOR', description: 'COLOR' },
-  { name: 'PCS', description: 'PSC' },
-  { name: 'SIZE', description: 'SIZE' },
-  { name: 'DESCRIPTION', description: 'DESCRIPTION' },
-  { name: 'PRICE', description: 'PRICE' },
-  { name: 'UPC', description: 'UPC' },
-  { name: 'DEPT', description: 'DEPT' },
-  { name: 'CLASS', description: 'CLASS' },
-  { name: 'STYLE', description: 'STYLE' },
+  { name: "QTY", description: "QTY" },
+  { name: "COLOR", description: "COLOR" },
+  { name: "PCS", description: "PSC" },
+  { name: "SIZE", description: "SIZE" },
+  { name: "DESCRIPTION", description: "DESCRIPTION" },
+  { name: "PRICE", description: "PRICE" },
+  { name: "UPC", description: "UPC" },
+  { name: "DEPT", description: "DEPT" },
+  { name: "CLASS", description: "CLASS" },
+  { name: "STYLE", description: "STYLE" },
 ];
 
 export default function App() {
@@ -59,6 +72,7 @@ export default function App() {
   const stageRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] = useState(null);
+  const [selectedColor, setSelectedColor] = useState("#ffffff");
 
   useEffect(() => {
     function handleResize() {
@@ -70,10 +84,10 @@ export default function App() {
     }
 
     handleResize();
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -81,7 +95,7 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (
-        (event.key === 'Delete' || event.key === 'Backspace') &&
+        (event.key === "Delete" || event.key === "Backspace") &&
         selectedElement
       ) {
         const newElements = canvasElements.filter(
@@ -92,14 +106,12 @@ export default function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedElement]);
-
-  const [selectedColor, setSelectedColor] = useState('#ffffff');
 
   function handleColorChange(newColor) {
     setSelectedColor(newColor);
@@ -109,63 +121,111 @@ export default function App() {
 
   // we must load images from database to this state
   const [imageList, setImageList] = useState([
-    { url: 'https://picsum.photos/200/300?id=1' },
-    { url: 'https://picsum.photos/200/300?id=2' },
-    { url: 'https://picsum.photos/200/300?id=3' },
-    { url: 'https://picsum.photos/200/300?id=4' },
-    { url: 'https://picsum.photos/200/300?id=5' },
-    { url: 'https://picsum.photos/200/300?id=6' },
-    { url: 'https://picsum.photos/200/300?id=7' },
-    { url: 'https://picsum.photos/200/300?id=8' },
-    { url: 'https://picsum.photos/200/300?id=9' },
-    { url: 'https://picsum.photos/200/300?id=0' },
-    { url: 'https://picsum.photos/200/300?id=11' },
-    { url: 'https://picsum.photos/200/300?id=12' },
-    { url: 'https://picsum.photos/200/300?id=13' },
+    { url: picsumid1 },
+    { url: picsumid2 },
+    { url: picsumid3 },
+    { url: picsumid4 },
+    { url: picsumid5 },
+    { url: picsumid6 },
+    { url: picsumid7 },
+    { url: picsumid8 },
+    { url: picsumid9 },
   ]);
 
   // we must load images from database to this state
   const [barcodeImageList, setBarcodeImageList] = useState([
     {
-      url: 'https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-c133d21/wp-content/uploads/2015/02/barcode-3.png',
+      url: barcode1,
     },
     {
-      url: 'https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png',
+      url: barcode2,
     },
   ]);
+
+  const [selectedOption, setSelectedOption] = useState("Download as");
+
+  const handleExportClick = (format) => {
+    const isMobile = window.innerWidth <= 768;
+    setSelectedOption("Download as");
+    if (format === "pdf") {
+      const stageEx = stageRef.current;
+      const dataURL = stageEx.toDataURL({
+        pixelRatio: window.devicePixelRatio,
+        mimeType: "image/png",
+        quality: 1,
+      });
+      const doc = new jsPDF("landscape", "px", [
+        stageEx.width(),
+        stageEx.height(),
+      ]);
+
+      if (isMobile) {
+        const mobileWidth = 300;
+        const mobileHeight = 400;
+        const scaleFactor = Math.min(
+          mobileWidth / stageEx.width(),
+          mobileHeight / stageEx.height()
+        );
+        const scaledWidth = stageEx.width() * scaleFactor;
+        const scaledHeight = stageEx.height() * scaleFactor;
+
+        doc.addImage(dataURL, "PNG", 0, 0, scaledWidth, scaledHeight);
+      } else {
+        doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
+      }
+      doc.save("newlabel.pdf");
+    } else {
+      const mimeType = format === "png" ? "image/png" : "image/jpeg";
+      const extension = format === "png" ? "png" : "jpg";
+
+      const stageEx = stageRef.current;
+      const dataURL = stageEx.toDataURL({
+        pixelRatio: window.devicePixelRatio,
+        mimeType: mimeType,
+        quality: 1,
+      });
+
+      const link = document.createElement("a");
+      link.download = `newlabel.${extension}`;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   // CANVAS ELEMENTS, please add all elements you want to render in the canvas
   // I added a text element as an example
   const [canvasElements, setCanvasElements] = useState([
     {
-      id: '1',
-      type: 'text',
+      id: "1",
+      type: "text",
       draggable: true,
       state: {
         isDragging: false,
         x: 10,
         y: 50,
-        text: 'Draggable Text',
-        fontFamily: 'Roboto',
+        text: "Draggable Text",
+        fontFamily: "Roboto",
         fontSize: 20,
       },
     },
     {
-      id: '2',
-      type: 'text',
+      id: "2",
+      type: "text",
       draggable: false,
       state: {
         isDragging: false,
         x: 200,
         y: 50,
-        text: 'Not Draggable Text 2',
-        fontFamily: 'Verdana',
+        text: "Not Draggable Text 2",
+        fontFamily: "Verdana",
         fontSize: 40,
       },
     },
     {
-      id: '4',
-      type: 'image',
+      id: "4",
+      type: "image",
       draggable: true,
       state: {
         isDragging: false,
@@ -173,12 +233,12 @@ export default function App() {
         y: 200,
         width: 300,
         height: 250,
-        url: 'https://cdn130.picsart.com/280172553005211.png',
+        url: image1,
       },
     },
     {
-      id: '5',
-      type: 'image',
+      id: "5",
+      type: "image",
       draggable: true,
       isDynamic: true,
       state: {
@@ -187,7 +247,7 @@ export default function App() {
         y: 600,
         width: 300,
         height: 100,
-        url: 'https://propelapps.com/wp-content/uploads/2020/03/Barcode-Scan-e1551864357220.png',
+        url: barcode1,
       },
     },
   ]);
@@ -248,7 +308,7 @@ export default function App() {
 
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
-    if (element.type === 'text') {
+    if (element.type === "text") {
       return (
         <Text
           text={element.state.text}
@@ -257,13 +317,13 @@ export default function App() {
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           draggable={element.draggable}
-          fill={element.state.isDragging ? 'green' : 'black'}
+          fill={element.state.isDragging ? "green" : "black"}
           onDragStart={() => onDragStart(element)}
           onDragEnd={(e) => onDragEnd(e, element)}
         />
       );
     }
-    if (element.type === 'image') {
+    if (element.type === "image") {
       return (
         <LoadImage
           id={element.id}
@@ -324,17 +384,19 @@ export default function App() {
             canvasElements={canvasElements}
             setCanvasElements={setCanvasElements}
             setSelectedElement={setSelectedElement}
+            handleExportClick={handleExportClick}
+            selectedOption={selectedOption}
           />
           {/* A partir de aqui Canvas*/}
           <div
             className="containerCanvas"
             ref={containerRef}
-            style={{ width: '100%', height: '80vh' }}
+            style={{ width: "100%", height: "80vh" }}
           >
             <Stage
               width={dimensions.width}
               height={dimensions.height}
-              style={{ border: '1px solid lightgray' }}
+              style={{ border: "1px solid lightgray" }}
               onMouseDown={handleDeselectElement}
               onTouchStart={handleDeselectElement}
               ref={stageRef}

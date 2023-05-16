@@ -16,6 +16,8 @@ export default function ToolbarLabel({
   canvasElements,
   setCanvasElements,
   setSelectedElement,
+  handleExportClick,
+  selectedOption,
 }) {
   const [checked, setChecked] = useState(false);
   const isSelected = !!selectedElement;
@@ -129,16 +131,18 @@ export default function ToolbarLabel({
                   </button>
                 </div>
                 <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">
-                  <button
-                    type="button"
-                    className="relative inline-flex items-center gap-x-1.5 rounded-md border px-3 py-2 text-sm font-semibold text-ft-blue-300 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                  <select
+                    value={selectedOption}
+                    onChange={(e) => handleExportClick(e.target.value)}
+                    className="relative inline-flex items-center gap-x-1.5 rounded-md border px-3 py-2 text-sm font-semibold text-ft-blue-300 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   >
-                    <DownloadIcon
-                      className="-ml-0.5 h-5 w-5"
-                      aria-hidden="true"
-                    />
-                    Download
-                  </button>
+                    <option value="" hidden>
+                      Download as
+                    </option>
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="pdf">PDF</option>
+                  </select>
                 </div>
               </div>
             </div>
