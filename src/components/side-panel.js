@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import {
   PencilIcon,
-  ArrowsExpandIcon,
-  UploadIcon,
   PhotographIcon,
-  CollectionIcon,
-  CubeIcon,
   DeviceMobileIcon,
   ColorSwatchIcon,
   TagIcon,
