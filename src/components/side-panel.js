@@ -10,9 +10,12 @@ import ColorPalette from './color-palette';
 import TextEditor from './text-editor';
 import ImageEditor from './image-editor';
 import FieldsEditor from './fields-editor';
+import SizeLabelEditor from './sizelabel-editor';
 
 export default function SidePanel({
   onColorChange,
+  onChangeW,
+  onChangeH,
   fontFamily,
   setFontFamily,
   imageList,
@@ -25,6 +28,18 @@ export default function SidePanel({
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
+  const [selectedW, setSelectedW] = useState();
+  const [selectedH, setSelectedH] = useState();
+
+  function handleChangeW(newWidth) {
+    setSelectedW(newWidth);
+    onChangeW(newWidth);
+  }
+
+  function handleChangeH(newHeight) {
+    setSelectedH(newHeight);
+    onChangeH(newHeight);
+  }
 
   function handleColorChange(newColor) {
     setSelectedColor(newColor);
@@ -39,12 +54,13 @@ export default function SidePanel({
     },
     {
       label: 'Text',
-      content: 
-        <TextEditor 
-          setFontFamily={setFontFamily} 
-          fontFamily={fontFamily} 
+      content: (
+        <TextEditor
+          setFontFamily={setFontFamily}
+          fontFamily={fontFamily}
           setCanvasElements={setCanvasElements}
-        />,
+        />
+      ),
       icon: PencilIcon,
     },
     {
@@ -84,12 +100,19 @@ export default function SidePanel({
       label: "Layers",
       content: "Aqui se indicaran los elementos que hay en el lienzo",
       icon: CollectionIcon,
-    },
-    {
-      label: "Resize",
-      content: "Aqui se indicara el tamaño de la etiqueta",
-      icon: ArrowsExpandIcon,
     },*/
+    {
+      label: 'Resize',
+      content: (
+        <SizeLabelEditor
+          initialW={selectedW}
+          initialH={selectedH}
+          onChangeW={handleChangeW}
+          onChangeH={handleChangeH}
+        />
+      ),
+      icon: ArrowsExpandIcon,
+    },
   ];
 
   const handleOptionClick = (option) => {
@@ -113,8 +136,8 @@ export default function SidePanel({
                     key={index}
                     className={`${
                       activeTab === index
-                        ? "bg-gray-200 text-[#3c5865]"
-                        : "bg-white text-[#3c5865]"
+                        ? 'bg-gray-200 text-[#3c5865]'
+                        : 'bg-white text-[#3c5865]'
                     } p-4 border-b border-x border-gray-300 focus:outline-none hover:bg-gray-200 text-sm`}
                     onClick={() => setActiveTab(index)}
                   >
