@@ -1,23 +1,23 @@
-import { React, Fragment, useRef, useState, useEffect } from "react";
-import { Stage, Layer, Rect, Text, Image } from "react-konva";
-import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
-import ToolbarLabel from "./components/toolbar-label";
-import SidePanel from "./components/side-panel";
-import { LoadImage } from "./components/image-editor";
+import { React, Fragment, useRef, useState, useEffect } from 'react';
+import { Stage, Layer, Rect, Text, Image } from 'react-konva';
+import { ZoomInIcon, ZoomOutIcon } from '@heroicons/react/outline';
+import ToolbarLabel from './components/toolbar-label';
+import SidePanel from './components/side-panel';
+import { LoadImage } from './components/image-editor';
 import { LoadText } from './components/text-editor';
-import jsPDF from "jspdf";
-import barcode1 from "./images/barcode1.png";
-import barcode2 from "./images/barcode2.jpg";
-import image1 from "./images/example.png";
-import picsumid1 from "./images/1.jpg";
-import picsumid2 from "./images/2.jpg";
-import picsumid3 from "./images/3.jpg";
-import picsumid4 from "./images/4.jpg";
-import picsumid5 from "./images/5.jpg";
-import picsumid6 from "./images/6.jpg";
-import picsumid7 from "./images/7.jpg";
-import picsumid8 from "./images/8.jpg";
-import picsumid9 from "./images/9.jpg";
+import jsPDF from 'jspdf';
+import barcode1 from './images/barcode1.png';
+import barcode2 from './images/barcode2.jpg';
+import image1 from './images/example.png';
+import picsumid1 from './images/1.jpg';
+import picsumid2 from './images/2.jpg';
+import picsumid3 from './images/3.jpg';
+import picsumid4 from './images/4.jpg';
+import picsumid5 from './images/5.jpg';
+import picsumid6 from './images/6.jpg';
+import picsumid7 from './images/7.jpg';
+import picsumid8 from './images/8.jpg';
+import picsumid9 from './images/9.jpg';
 
 export const Background = ({ height, width, color }) => {
   let newWidth = 0;
@@ -42,7 +42,7 @@ export const Background = ({ height, width, color }) => {
       x={newX}
       y={newY}
       fill={color}
-      shadowColor={"black"}
+      shadowColor={'black'}
       shadowBlur={10}
       shadowOpacity={0.5}
     />
@@ -50,22 +50,22 @@ export const Background = ({ height, width, color }) => {
 };
 
 const FONT_FAMILY_LIST = [
-  { name: "Roboto", value: "Roboto" },
-  { name: "Arial", value: "Arial" },
-  { name: "Verdana", value: "Verdana" },
+  { name: 'Roboto', value: 'Roboto' },
+  { name: 'Arial', value: 'Arial' },
+  { name: 'Verdana', value: 'Verdana' },
 ];
 
 const fields = [
-  { name: "QTY", description: "QTY" },
-  { name: "COLOR", description: "COLOR" },
-  { name: "PCS", description: "PSC" },
-  { name: "SIZE", description: "SIZE" },
-  { name: "DESCRIPTION", description: "DESCRIPTION" },
-  { name: "PRICE", description: "PRICE" },
-  { name: "UPC", description: "UPC" },
-  { name: "DEPT", description: "DEPT" },
-  { name: "CLASS", description: "CLASS" },
-  { name: "STYLE", description: "STYLE" },
+  { name: 'QTY', description: 'QTY' },
+  { name: 'COLOR', description: 'COLOR' },
+  { name: 'PCS', description: 'PSC' },
+  { name: 'SIZE', description: 'SIZE' },
+  { name: 'DESCRIPTION', description: 'DESCRIPTION' },
+  { name: 'PRICE', description: 'PRICE' },
+  { name: 'UPC', description: 'UPC' },
+  { name: 'DEPT', description: 'DEPT' },
+  { name: 'CLASS', description: 'CLASS' },
+  { name: 'STYLE', description: 'STYLE' },
 ];
 
 export default function App() {
@@ -73,7 +73,9 @@ export default function App() {
   const stageRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] = useState(null);
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
+  const [selectedColor, setSelectedColor] = useState('#ffffff');
+  const [selectedW, setSelectedW] = useState(3 * 88.088012 + 'px');
+  const [selectedH, setSelectedH] = useState(5 * 88.088012 + 'px');
 
   useEffect(() => {
     function handleResize() {
@@ -85,18 +87,18 @@ export default function App() {
     }
 
     handleResize();
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [setSelectedW, setSelectedH]);
 
   // listens to the key delete to remove the selected element
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (
-        (event.key === "Delete" || event.key === "Backspace") &&
+        (event.key === 'Delete' || event.key === 'Backspace') &&
         selectedElement
       ) {
         const newElements = canvasElements.filter(
@@ -107,15 +109,23 @@ export default function App() {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedElement]);
 
   function handleColorChange(newColor) {
     setSelectedColor(newColor);
+  }
+
+  function handleChangeW(newWidth) {
+    setSelectedW(newWidth);
+  }
+
+  function handleChangeH(newHeight) {
+    setSelectedH(newHeight);
   }
 
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
@@ -143,19 +153,19 @@ export default function App() {
     },
   ]);
 
-  const [selectedOption, setSelectedOption] = useState("Download as");
+  const [selectedOption, setSelectedOption] = useState('Download as');
 
   const handleExportClick = (format) => {
     const isMobile = window.innerWidth <= 768;
-    setSelectedOption("Download as");
-    if (format === "pdf") {
+    setSelectedOption('Download as');
+    if (format === 'pdf') {
       const stageEx = stageRef.current;
       const dataURL = stageEx.toDataURL({
         pixelRatio: window.devicePixelRatio,
-        mimeType: "image/png",
+        mimeType: 'image/png',
         quality: 1,
       });
-      const doc = new jsPDF("landscape", "px", [
+      const doc = new jsPDF('landscape', 'px', [
         stageEx.width(),
         stageEx.height(),
       ]);
@@ -170,14 +180,14 @@ export default function App() {
         const scaledWidth = stageEx.width() * scaleFactor;
         const scaledHeight = stageEx.height() * scaleFactor;
 
-        doc.addImage(dataURL, "PNG", 0, 0, scaledWidth, scaledHeight);
+        doc.addImage(dataURL, 'PNG', 0, 0, scaledWidth, scaledHeight);
       } else {
-        doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
+        doc.addImage(dataURL, 'PNG', 0, 0, stageEx.width(), stageEx.height());
       }
-      doc.save("newlabel.pdf");
+      doc.save('newlabel.pdf');
     } else {
-      const mimeType = format === "png" ? "image/png" : "image/jpeg";
-      const extension = format === "png" ? "png" : "jpg";
+      const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+      const extension = format === 'png' ? 'png' : 'jpg';
 
       const stageEx = stageRef.current;
       const dataURL = stageEx.toDataURL({
@@ -186,7 +196,7 @@ export default function App() {
         quality: 1,
       });
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.download = `newlabel.${extension}`;
       link.href = dataURL;
       document.body.appendChild(link);
@@ -199,34 +209,34 @@ export default function App() {
   // I added a text element as an example
   const [canvasElements, setCanvasElements] = useState([
     {
-      id: "1",
-      type: "text",
+      id: '1',
+      type: 'text',
       draggable: true,
       state: {
         isDragging: false,
         x: 10,
         y: 50,
-        text: "Draggable Text",
-        fontFamily: "Roboto",
+        text: 'Draggable Text',
+        fontFamily: 'Roboto',
         fontSize: 20,
       },
     },
     {
-      id: "2",
-      type: "text",
+      id: '2',
+      type: 'text',
       draggable: false,
       state: {
         isDragging: false,
         x: 200,
         y: 50,
-        text: "Not Draggable Text 2",
-        fontFamily: "Verdana",
+        text: 'Not Draggable Text 2',
+        fontFamily: 'Verdana',
         fontSize: 40,
       },
     },
     {
-      id: "3",
-      type: "image",
+      id: '3',
+      type: 'image',
       draggable: true,
       state: {
         isDragging: false,
@@ -238,8 +248,8 @@ export default function App() {
       },
     },
     {
-      id: "4",
-      type: "image",
+      id: '4',
+      type: 'image',
       draggable: true,
       isDynamic: true,
       state: {
@@ -308,7 +318,7 @@ export default function App() {
   };
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
-    if (element.type === "text") {
+    if (element.type === 'text') {
       return (
         <LoadText
           text={element.state.text}
@@ -326,7 +336,7 @@ export default function App() {
         />
       );
     }
-    if (element.type === "image") {
+    if (element.type === 'image') {
       return (
         <LoadImage
           id={element.id}
@@ -371,6 +381,8 @@ export default function App() {
         <div className="md:col-span-4">
           <SidePanel
             onColorChange={handleColorChange}
+            onChangeW={handleChangeW}
+            onChangeH={handleChangeH}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
             imageList={imageList}
@@ -393,35 +405,42 @@ export default function App() {
           />
           {/* A partir de aqui Canvas*/}
           <div
-            className="containerCanvas"
-            ref={containerRef}
-            style={{ width: "100%", height: "80vh" }}
+            style={{
+              width: '100%',
+              height: '80vh',
+              backgroundColor: '#CDCBCB',
+            }}
           >
-            <Stage
-              width={dimensions.width}
-              height={dimensions.height}
-              style={{ border: "1px solid lightgray" }}
-              onMouseDown={handleDeselectElement}
-              onTouchStart={handleDeselectElement}
-              ref={stageRef}
+            <div
+              className="containerCanvas"
+              ref={containerRef}
+              style={{
+                width: selectedW,
+                height: selectedH,
+                backgroundColor: 'white',
+                margin: '5px',
+                border: '1px solid black',
+              }}
             >
-              <Layer>
-                <Background
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  color={selectedColor}
-                />
-                {/* Esto es solo un ejemplo de drag and drop*/}
-                {canvasElements.map((element) => (
-                  <Fragment key={element.id}>
-                    {getCanvasElement(element)}
-                  </Fragment>
-                ))}
-              </Layer>
-            </Stage>
-
-            {/* A partir de aqui Zoom*/}
-            {/* 
+              <Stage
+                width={selectedW.substring(0, selectedW.length - 2)}
+                height={selectedH.substring(0, selectedH.length - 2)}
+                //style={{ border: '1px solid white' }}
+                onMouseDown={handleDeselectElement}
+                onTouchStart={handleDeselectElement}
+                ref={stageRef}
+              >
+                <Layer>
+                  {/* Esto es solo un ejemplo de drag and drop*/}
+                  {canvasElements.map((element) => (
+                    <Fragment key={element.id}>
+                      {getCanvasElement(element)}
+                    </Fragment>
+                  ))}
+                </Layer>
+              </Stage>
+              {/* A partir de aqui Zoom*/}
+              {/* 
             <div className="flex justify-center z-10 -mt-20 md:-mt-11">
               <span className="isolate inline-flex rounded-md shadow-sm">
                 <button
@@ -442,6 +461,7 @@ export default function App() {
               </span>
             </div>
             */}
+            </div>
           </div>
         </div>
       </div>
