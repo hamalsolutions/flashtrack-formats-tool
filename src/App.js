@@ -1,13 +1,10 @@
 import { React, Fragment, useRef, useState, useEffect } from "react";
-import { Stage, Layer, Rect, Text, Image } from "react-konva";
-import { ZoomInIcon, ZoomOutIcon } from "@heroicons/react/outline";
+import { Stage, Layer, Rect } from "react-konva";
 import ToolbarLabel from "./components/toolbar-label";
 import SidePanel from "./components/side-panel";
 import { LoadImage } from "./components/image-editor";
 import { LoadText } from './components/text-editor';
 import jsPDF from "jspdf";
-import barcode1 from "./images/barcode1.png";
-import barcode2 from "./images/barcode2.jpg";
 import image1 from "./images/example.png";
 import picsumid1 from "./images/1.jpg";
 import picsumid2 from "./images/2.jpg";
@@ -133,16 +130,6 @@ export default function App() {
     { url: picsumid9 },
   ]);
 
-  // we must load images from database to this state
-  const [barcodeImageList, setBarcodeImageList] = useState([
-    {
-      url: barcode1,
-    },
-    {
-      url: barcode2,
-    },
-  ]);
-
   const [selectedOption, setSelectedOption] = useState("Download as");
 
   const handleExportClick = (format, name) => {
@@ -219,19 +206,6 @@ export default function App() {
       },
     },
     {
-      id: "2",
-      type: "text",
-      draggable: false,
-      state: {
-        isDragging: false,
-        x: 200,
-        y: 50,
-        text: "Not Draggable Text 2",
-        fontFamily: "Verdana",
-        fontSize: 40,
-      },
-    },
-    {
       id: "3",
       type: "image",
       draggable: true,
@@ -242,20 +216,6 @@ export default function App() {
         width: 300,
         height: 250,
         url: image1,
-      },
-    },
-    {
-      id: "4",
-      type: "image",
-      draggable: true,
-      isDynamic: true,
-      state: {
-        isDragging: false,
-        x: 500,
-        y: 600,
-        width: 300,
-        height: 100,
-        url: barcode1,
       },
     },
   ]);
@@ -333,7 +293,7 @@ export default function App() {
         />
       );
     }
-    if (element.type === "image") {
+    if (element.type === "image" || element.type === "barcode") {
       return (
         <LoadImage
           id={element.id}
@@ -382,8 +342,6 @@ export default function App() {
             setFontFamily={setFontFamily}
             imageList={imageList}
             setImageList={setImageList}
-            barcodeImageList={barcodeImageList}
-            setBarcodeImageList={setBarcodeImageList}
             setCanvasElements={setCanvasElements}
             fields={fields}
           />

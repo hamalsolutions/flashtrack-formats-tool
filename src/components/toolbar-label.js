@@ -2,12 +2,8 @@ import { useState, useEffect } from 'react';
 import { Disclosure } from '@headlessui/react';
 import {
   TrashIcon,
-  DownloadIcon,
   ArrowNarrowLeftIcon,
   ArrowNarrowRightIcon,
-  DuplicateIcon,
-  LockOpenIcon,
-  TemplateIcon,
 } from '@heroicons/react/outline';
 
 export default function ToolbarLabel({
@@ -26,14 +22,13 @@ export default function ToolbarLabel({
   useEffect(() => {
     const isChecked = isSelected ? selectedElement.isDynamic || false : false;
     setChecked(isChecked);
-  }, [selectedElement]);
+  }, [selectedElement, isSelected]);
 
   const markCheckbox = (e) => {
     if (selectedElement) {
       handleDynamicElement(selectedElement, e.target.checked);
       setChecked(e.target.checked);
-    }
-    {
+    } else {
       setChecked(false);
     }
   };
