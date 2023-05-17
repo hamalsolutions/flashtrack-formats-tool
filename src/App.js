@@ -96,7 +96,7 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (
-        (event.key === "Delete" || event.key === "Backspace") &&
+        (event.key === "Delete") &&
         selectedElement
       ) {
         const newElements = canvasElements.filter(
@@ -145,8 +145,15 @@ export default function App() {
 
   const [selectedOption, setSelectedOption] = useState("Download as");
 
-  const handleExportClick = (format) => {
+  const handleExportClick = (format, name) => {
     const isMobile = window.innerWidth <= 768;
+    const fileNameValidator = /^[\w\-. ]+$/gm;
+    let formatName = "newlabel";
+
+    if (name && fileNameValidator.test(name)) {
+      formatName = name;
+    }
+
     setSelectedOption("Download as");
     if (format === "pdf") {
       const stageEx = stageRef.current;
@@ -174,7 +181,7 @@ export default function App() {
       } else {
         doc.addImage(dataURL, "PNG", 0, 0, stageEx.width(), stageEx.height());
       }
-      doc.save("newlabel.pdf");
+      doc.save(`${formatName}.pdf`);
     } else {
       const mimeType = format === "png" ? "image/png" : "image/jpeg";
       const extension = format === "png" ? "png" : "jpg";
@@ -187,7 +194,7 @@ export default function App() {
       });
 
       const link = document.createElement("a");
-      link.download = `newlabel.${extension}`;
+      link.download = `${formatName}.${extension}`;
       link.href = dataURL;
       document.body.appendChild(link);
       link.click();
