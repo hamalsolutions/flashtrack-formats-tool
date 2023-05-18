@@ -70,9 +70,20 @@ export default function App() {
   const stageRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] = useState(null);
-  const [selectedColor, setSelectedColor] = useState('#ffffff');
-  const [selectedW, setSelectedW] = useState(3 * 88.088012 + 'px');
-  const [selectedH, setSelectedH] = useState(5 * 88.088012 + 'px');
+  const [selectedColor, setSelectedColor] = useState("#ffffff");
+  const [selectedW, setSelectedW] = useState(3 * 88.088012 + "px");
+  const [selectedH, setSelectedH] = useState(5 * 88.088012 + "px");
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+  const applyTemplate = (template) => {
+    setCanvasElements(template.elements);
+  };
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      applyTemplate(selectedTemplate);
+    }
+  }, [selectedTemplate]);
 
   useEffect(() => {
     function handleResize() {
@@ -362,6 +373,7 @@ export default function App() {
             onSelect={onSelect}
             getCanvasElement={getCanvasElement}
             onChange={onChange}
+            setSelectedTemplate={setSelectedTemplate}
           />
         </div>
         <div className="col-span-12 md:col-span-8">
