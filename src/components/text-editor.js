@@ -31,8 +31,8 @@ const FONT_SIZE_LIST = [
 ];
 
 export const LoadText = ({
-  text,
   id,
+  text,
   x,
   y,
   width,
@@ -45,76 +45,77 @@ export const LoadText = ({
   onChange,
   fontFamily,
   fontSize,
-  fill
+  fill,
+  selectedElement
 }) => {
   const textRef = useRef();
   const trRef = useRef();
-  
+
   useEffect(() => {
       if (isSelected) {
           trRef.current.nodes([textRef.current]);
           trRef.current.getLayer().batchDraw();
       }
   }, [isSelected]);
-  
+
   return (
-      <Fragment>
-          <Text
-              ref={textRef}
-              text={text}
-              x={x}
-              y={y}
-              fontFamily={fontFamily}
-              fontSize={fontSize}
-              fill={fill}
-              width={width}
-              height={height}
-              draggable={draggable}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-              id={id}
-              onClick={onSelect}
-              onTap={onSelect}
-              onTransformEnd={(e) => {
-                const node = textRef.current;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
-                node.scaleX(1);
-                node.scaleY(1);
-                onChange({
-                  x: node.x(),
-                  y: node.y(),
-                  width: Math.max(5, node.width() * scaleX),
-                  height: Math.max(node.height() * scaleY),
-                });
-              }}
-              onTransform={() => {
-                const node = textRef.current;
-                node.setAttrs({
-                  width: Math.max(node.width() * node.scaleX(), 20),
-                  height: Math.max(node.height() * node.scaleY(), 20),
-                  scaleX: 1,
-                  scaleY: 1,
-                });
-              }}
+    <Fragment>
+        <Text
+            id={id}
+            ref={textRef}
+            text={text}
+            x={x}
+            y={y}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+            fill={fill}
+            width={width}
+            height={height}
+            draggable={draggable}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onClick={onSelect}
+            onTap={onSelect}
+            onTransformEnd={(e) => {
+              const node = textRef.current;
+              const scaleX = node.scaleX();
+              const scaleY = node.scaleY();
+              node.scaleX(1);
+              node.scaleY(1);
+              onChange({
+                x: node.x(),
+                y: node.y(),
+                width: Math.max(5, node.width() * scaleX),
+                height: Math.max(node.height() * scaleY),
+              });
+            }}
+            onTransform={() => {
+              const node = textRef.current;
+              node.setAttrs({
+                width: Math.max(node.width() * node.scaleX(), 20),
+                height: Math.max(node.height() * node.scaleY(), 20),
+                scaleX: 1,
+                scaleY: 1,
+              });
+            }}
+        />
+        {isSelected && (
+          <Transformer
+            ref={trRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // limit resize
+              if (newBox.width < 20) {
+                return oldBox;
+              }
+              return newBox;
+            }}
           />
-          {isSelected && (
-            <Transformer
-              ref={trRef}
-              boundBoxFunc={(oldBox, newBox) => {
-                // limit resize
-                if (newBox.width < 20) {
-                  return oldBox;
-                }
-                return newBox;
-              }}
-            />
-          )}
-      </Fragment>
+        )}
+    </Fragment>
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, setCanvasElements}){
+export default function TextEditor ({fontFamily, setFontFamily, setCanvasElements, selectedElement}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState(fontFamily);
@@ -127,6 +128,8 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
   const [error, setError] = useState(false);
 
   const button = document.getElementById("add-text-button");
+
+  const isSelectedElement = selectedElement && selectedElement.type === "text" ? true : false;
 
   useEffect(() => {
     // Carga las fuentes personalizadas guardadas en el localStorage al iniciar la aplicación
@@ -156,9 +159,30 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
     document.head.appendChild(customFontsStylesheet);
   }, [customFonts]);
 
+  //Permite modificar el elemento seleccionado
+  const updateSelectedElement = (id, property, value) => {
+    setCanvasElements((prevElements) => {
+      return prevElements.map((obj) => {
+        if (obj.id === id) {
+          return {
+            ...obj,
+            state: {
+              ...obj.state,
+              [property]: value,
+            },
+          };
+        }
+        return obj;
+      });
+    });
+  }
 
   const handleFontFamilyChange = (event) => {
-    setFontFamily(event.target.value);
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, "fontFamily", event.target.value);
+    }else{
+      setFontFamily(event.target.value);
+    }
   };
 
   const handleNewFontNameChange = (event) => {
@@ -167,7 +191,7 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
 
   const handleNewFontFileChange = (event) => {
     setNewFontFile(event.target.files[0]);
-    };
+  };
     
   function handleView(view) {
     setView(view);
@@ -175,7 +199,11 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
   }
 
   const handleTextContent = (event) => {
-    setTextContent(event.target.value);
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, "text", event.target.value);
+    }else{
+     setTextContent(event.target.value);
+    }
   };
 
   const handleNewText = () => {
@@ -194,11 +222,19 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
   }
 
   function handleColorChange(newColor) {
-    setColor(newColor.hex);
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, "fill", newColor.hex);
+    }else{
+      setColor(newColor.hex);
+    }
   }
 
   const handleTextSizeSelect = (event) => {
-    setFontSize(parseInt(event.target.value));
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, "fontSize", event.target.value);
+    }else{
+      setFontSize(parseInt(event.target.value));
+    }
   }
 
   const handleSubmit = (event) => {
@@ -233,8 +269,8 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
             type: "text",
             draggable: true,
             isDynamic: true,
-            fill: color,
             state: {
+                fill: color,
                 text: textContent,
                 x: 200,
                 y: 200,
@@ -256,7 +292,7 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
           className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
           placeholder={"Set text Here..."}
           onChange={handleTextContent}
-          value={textContent}
+          value={isSelectedElement ? selectedElement.state.text : textContent}
           onKeyDown={handleEnterToAddText}
         />
         <button 
@@ -272,7 +308,12 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
         <div className="pb-4 mb-2">
           <div>
             <label htmlFor="font-family-select" className="text-ft-blue-300" >Font: </label>
-            <select id="font-family-select" className="py-2 max-w-lg block w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" value={fontFamily} onChange={handleFontFamilyChange}>
+            <select 
+              id="font-family-select" 
+              className="py-2 max-w-lg block w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" 
+              value={isSelectedElement ? selectedElement.state.fontFamily : fontFamily} 
+              onChange={handleFontFamilyChange}
+            >
               {allFonts.map((font) => (
                 <option key={font.value} value={font.value}>
                   {font.name}
@@ -316,7 +357,11 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
         <div className="mt-4">
           <div className="flex mb-4">
             <p>Font size: </p>
-            <select className="ml-2 shadow-sm" onChange={handleTextSizeSelect}>
+            <select 
+              className="ml-2 shadow-sm" 
+              onChange={handleTextSizeSelect}
+              value={isSelectedElement ? selectedElement.state.fontSize : fontSize}
+            >
               {FONT_SIZE_LIST.map((fontSize, index) => (
                 <option key={index} value={fontSize.value}>
                   {fontSize.value}
@@ -332,26 +377,26 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
               <p className='mx-2'>Font Color</p>
               {showPicker ? (
                 <XIcon
-                className="h-6 w-6 text-ft-blue-300 "
-                aria-hidden="true"
+                  className="h-6 w-6 text-ft-blue-300 "
+                  aria-hidden="true"
                 />
                 ) : (
                   <ColorSwatchIcon
-                  className="h-6 w-6 text-ft-blue-300"
-                  aria-hidden="true"
+                    className="h-6 w-6 text-ft-blue-300"
+                    aria-hidden="true"
                   />
                   )}
             </button>
             <input 
               className="mx-2 px-2"
               type="color" 
-              value={color}
+              value={isSelectedElement ? selectedElement.state.fill : color}
               disabled
             />  
           </div>
           {showPicker && (
             <div className="absolute top-0 left-0 z-10 mt-10">
-              <SketchPicker color={color} onChange={handleColorChange} />
+              <SketchPicker color={isSelectedElement ? selectedElement.state.fill : color} onChange={handleColorChange} />
             </div>
           )}
         </div>
