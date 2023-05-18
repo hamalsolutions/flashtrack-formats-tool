@@ -206,6 +206,7 @@ export default function App() {
       type: "text",
       draggable: true,
       state: {
+        fill: "#000000",
         isDragging: false,
         x: 10,
         y: 50,
@@ -287,13 +288,14 @@ export default function App() {
     if (element.type === "text") {
       return (
         <LoadText
+          id={element.id}
           text={element.state.text}
           x={element.state.x}
           y={element.state.y}
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           draggable={element.draggable}
-          fill={element.fill}
+          fill={element.state.fill}
           onDragStart={() => onDragStart(element)}
           onDragEnd={(e) => onDragEnd(e, element)}
           onSelect={() => onSelect(element)}
@@ -353,7 +355,9 @@ export default function App() {
             setFontFamily={setFontFamily}
             imageList={imageList}
             setImageList={setImageList}
+            canvasElements={canvasElements}
             setCanvasElements={setCanvasElements}
+            selectedElement={selectedElement}
             fields={fields}
           />
         </div>

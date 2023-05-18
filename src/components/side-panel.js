@@ -23,8 +23,10 @@ export default function SidePanel({
   setImageList,
   barcodeImageList,
   setBarcodeImageList,
-  setCanvasElements,
   fields,
+  canvasElements,
+  setCanvasElements,
+  selectedElement
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -60,6 +62,7 @@ export default function SidePanel({
           setFontFamily={setFontFamily}
           fontFamily={fontFamily}
           setCanvasElements={setCanvasElements}
+          selectedElement={selectedElement}
         />
       ),
       icon: PencilIcon,
