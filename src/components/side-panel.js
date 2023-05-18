@@ -5,6 +5,7 @@ import {
   DeviceMobileIcon,
   ColorSwatchIcon,
   TagIcon,
+  ArrowsExpandIcon,
 } from '@heroicons/react/outline';
 import ColorPalette from './color-palette';
 import TextEditor from './text-editor';
