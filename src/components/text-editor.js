@@ -272,8 +272,8 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
             state: {
                 fill: color,
                 text: textContent,
-                x: 200,
-                y: 200,
+                x: 10,
+                y: 10,
                 fontFamily: fontFamily,
                 fontSize: fontSize,
               }
