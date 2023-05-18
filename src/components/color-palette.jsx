@@ -41,7 +41,7 @@ export default function ColorPalette({ initialColor, onColorChange }) {
               )}
             </button>
             {showPicker && (
-              <div className="absolute top-0 left-0 z-10 mt-4">
+              <div className="absolute top-0 left-0 z-10 mt-10">
                 <SketchPicker color={color} onChange={handleColorChange} />
               </div>
             )}
