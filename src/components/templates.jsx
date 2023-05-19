@@ -44,11 +44,15 @@ export default function Templates({ setSelectedTemplate }) {
     <div className="overflow-y-auto h-screen">
       <h1 className="pb-4">Show Templates</h1>
       <div>
-        {templates.map((template, index) => (
-          <div key={index} className="pb-4" onClick={() => handleTemplateClick(template)}>
-            <img src={template.thumbnail} alt={template.name} className="w-44 h-auto" />
-          </div>
-        ))}
+        {templates && templates.length > 0 ? (
+          templates.map((template, index) => (
+            <div key={index} className="pb-4" onClick={() => handleTemplateClick(template)}>
+              <img src={template.thumbnail} alt={template.name} className="w-44 h-auto" />
+            </div>
+          ))
+        ) : (
+          <p>No templates available.</p>
+        )}
       </div>
     </div>
     );
