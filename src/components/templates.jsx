@@ -33,12 +33,6 @@ export default function Templates({ setSelectedTemplate }) {
       setSelectedTemplate(template);
     };
   
-    /*const handleApplyTemplate = () => {
-      if (selectedTemplate) {
-        applyTemplate(selectedTemplate);
-      }
-    };*/
-  
     return (
     <div className="overflow-y-auto h-screen">
       <h1 className="pb-4">Show Templates</h1>
