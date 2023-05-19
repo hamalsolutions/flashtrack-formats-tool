@@ -14,6 +14,7 @@ import ImageEditor from './image-editor';
 import FieldsEditor from './fields-editor';
 import SizeLabelEditor from './sizelabel-editor';
 import LayersEditor from './layers-editor';
+import Templates from './templates';
 
 export default function SidePanel({
   onColorChange,
@@ -32,6 +33,9 @@ export default function SidePanel({
   onSelect,
   getCanvasElement,
   onChange,
+  setSelectedTemplate,
+  templates,
+
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -57,7 +61,10 @@ export default function SidePanel({
   const tabs = [
     {
       label: 'Templates',
-      content: 'Aqui se mostraran los Templates',
+      content: <Templates 
+      setSelectedTemplate = {setSelectedTemplate}
+      templates = {templates}
+    />,
       icon: DeviceMobileIcon,
     },
     {
