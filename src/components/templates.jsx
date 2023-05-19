@@ -1,7 +1,6 @@
 import { React, useState, useEffect } from "react";
-const customerId = 1;
 
-const loadTemplate = async () => {
+const loadTemplate = async ({ customerId }) => {
   try {
     const response = await fetch(`${process.env.REACT_APP_API_URL}/newLabels/customer/${customerId}/`);
     const template = await response.json();
@@ -18,7 +17,7 @@ const loadTemplate = async () => {
 
 
 export default function Templates({ setSelectedTemplate }) {
-  
+  const customerId = 1;
   const [templates, setTemplates] = useState([]);
 
   const fetchTemplate = async () => {
@@ -27,7 +26,7 @@ export default function Templates({ setSelectedTemplate }) {
   };
   
   useEffect(() => {
-    fetchTemplate();
+    fetchTemplate({ customerId });
   }, []);
 
     const handleTemplateClick = (template) => {
