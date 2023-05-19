@@ -6,12 +6,14 @@ import {
   ColorSwatchIcon,
   TagIcon,
   ArrowsExpandIcon,
+  CollectionIcon,
 } from '@heroicons/react/outline';
 import ColorPalette from './color-palette';
 import TextEditor from './text-editor';
 import ImageEditor from './image-editor';
 import FieldsEditor from './fields-editor';
 import SizeLabelEditor from './sizelabel-editor';
+import LayersEditor from './layers-editor';
 
 export default function SidePanel({
   onColorChange,
@@ -26,7 +28,10 @@ export default function SidePanel({
   fields,
   canvasElements,
   setCanvasElements,
-  selectedElement
+  selectedElement,
+  onSelect,
+  getCanvasElement,
+  onChange,
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -100,11 +105,18 @@ export default function SidePanel({
       ),
       icon: ColorSwatchIcon,
     },
-    /* {
-      label: "Layers",
-      content: "Aqui se indicaran los elementos que hay en el lienzo",
+    {
+      label: 'Layers',
+      content: (
+        <LayersEditor
+          canvasElements={canvasElements}
+          onSelect={onSelect}
+          getCanvasElement={getCanvasElement}
+          onChange={onChange}
+        />
+      ),
       icon: CollectionIcon,
-    },*/
+    },
     {
       label: 'Resize',
       content: (
