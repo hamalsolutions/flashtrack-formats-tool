@@ -21,12 +21,12 @@ export default function Templates({ setSelectedTemplate }) {
   const [templates, setTemplates] = useState([]);
 
   const fetchTemplate = async () => {
-    const templateURL = await loadTemplate();
+    const templateURL = await loadTemplate({ customerId });
     setTemplates(templateURL);
   };
   
   useEffect(() => {
-    fetchTemplate({ customerId });
+    fetchTemplate();
   }, []);
 
     const handleTemplateClick = (template) => {
