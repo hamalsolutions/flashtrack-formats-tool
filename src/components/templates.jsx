@@ -1,9 +1,9 @@
 import { React, useState, useEffect } from "react";
-
+const customerId = 1;
 
 const loadTemplate = async () => {
   try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/newLabels/customer/1/`);
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/newLabels/customer/${customerId}/`);
     const template = await response.json();
     if (!response.ok) {
       const message = 'error';
