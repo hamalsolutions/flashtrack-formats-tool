@@ -194,7 +194,7 @@ export default function FieldsEditor({ fields, setCanvasElements }) {
         return newEditedFields;
       });
     };
-    console.log("field",editedFields);
+   
     return (
       <>
         <div className="p-3">
