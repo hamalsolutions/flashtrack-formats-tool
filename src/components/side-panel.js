@@ -99,7 +99,7 @@ export default function SidePanel({
     },*/
     {
       label: 'Fields',
-      content: <FieldsEditor fields={fields} />,
+      content: <FieldsEditor fields={fields} setCanvasElements={setCanvasElements} />,
       icon: TagIcon,
     },
     {

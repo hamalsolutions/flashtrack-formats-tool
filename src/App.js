@@ -4,6 +4,7 @@ import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
 import { LoadText } from './components/text-editor';
+import { LoadField } from './components/fields-editor';
 import jsPDF from 'jspdf';
 import image1 from './images/example.png';
 import picsumid1 from './images/1.jpg';
@@ -53,16 +54,16 @@ const FONT_FAMILY_LIST = [
 ];
 
 const fields = [
-  { name: 'QTY', description: 'QTY' },
-  { name: 'COLOR', description: 'COLOR' },
-  { name: 'PCS', description: 'PSC' },
-  { name: 'SIZE', description: 'SIZE' },
-  { name: 'DESCRIPTION', description: 'DESCRIPTION' },
-  { name: 'PRICE', description: 'PRICE' },
-  { name: 'UPC', description: 'UPC' },
-  { name: 'DEPT', description: 'DEPT' },
-  { name: 'CLASS', description: 'CLASS' },
-  { name: 'STYLE', description: 'STYLE' },
+  { id:1, name: 'QTY', description: 'QTY' },
+  { id:2, name: 'COLOR', description: 'COLOR'   },
+  { id:3, name: 'PCS', description: 'PSC'  },
+  { id:4, name: 'SIZE', description: 'SIZE'  },
+  { id:5, name: 'DESCRIPTION', description: 'DESCRIPTION'  },
+  { id:6, name: 'PRICE', description: 'PRICE'  },
+  { id:7, name: 'UPC', description: 'UPC'  },
+  { id:8, name: 'DEPT', description: 'DEPT'  },
+  { id:9, name: 'CLASS', description: 'CLASS'  },
+  { id:10, name: 'STYLE', description: 'STYLE'  },
 ];
 
 export default function App() {
@@ -299,6 +300,25 @@ export default function App() {
     if (element.type === 'text') {
       return (
         <LoadText
+          id={element.id}
+          text={element.state.text}
+          x={element.state.x}
+          y={element.state.y}
+          fontFamily={element.state.fontFamily}
+          fontSize={element.state.fontSize}
+          draggable={element.draggable}
+          fill={element.state.fill}
+          onDragStart={() => onDragStart(element)}
+          onDragEnd={(e) => onDragEnd(e, element)}
+          onSelect={() => onSelect(element)}
+          isSelected={selectedElement && selectedElement.id === element.id}
+          onChange={(newAttrs) => onChange(element, newAttrs)}
+        />
+      );
+    }
+    if (element.type === 'Checkbox') {
+      return (
+        <LoadField
           id={element.id}
           text={element.state.text}
           x={element.state.x}
