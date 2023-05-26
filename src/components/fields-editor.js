@@ -250,7 +250,7 @@ export default function FieldsEditor({ setCanvasElements }) {
             {fieldSelected}
           </span>
         </p>
-        <div className="overflow-y-auto h-[625px] px-1">
+        <div className="overflow-y-auto h-[610px] px-1">
           {results.map((attribute, index) => (
             <div key={attribute} className="flex items-center">
               <input
