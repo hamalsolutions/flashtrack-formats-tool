@@ -82,8 +82,6 @@ export default function App() {
   const [selectedH, setSelectedH] = useState(5 * 88.088012 + "px");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [imageTemplate, setImageTemplate] = useState("");
-  //console.log(selectedTemplate);
-  //console.log(selectedElement);
 
   const applyTemplate = (template) => {
     setCanvasElements(template.elements);

@@ -12,7 +12,7 @@ const loadTemplate = async ({ customerId }) => {
     }
     return template;
   } catch (error) {
-    console.error("Error al cargar el template:", error);
+    console.error("Error loading template:", error);
     return null;
   }
 };
@@ -36,11 +36,11 @@ const postNewLabelDesign = async function ({ customerId, templateName, imageTemp
       const data = await response.json();
       return data;
     } else {
-      console.log('Error al realizar la solicitud:', response.status);
+      console.log('Error making the request:', response.status);
       return null;
     }
   } catch (error) {
-    console.log('Error al realizar la solicitud:', error);
+    console.log('Error making the request:', error);
     return null;
   }
 };
@@ -82,7 +82,7 @@ export default function Templates({ setSelectedTemplate, handleCaptureClick, can
       await fetchTemplate();
 
     } catch (error) {
-      console.log('Error al guardar el template:', error);
+      console.log('Error saving template:', error);
     }
   };
 
