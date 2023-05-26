@@ -66,6 +66,12 @@ const fields = [
   { id:10, name: 'STYLE', description: 'STYLE'  },
 ];
 
+const captureCanvas = (stageRef) => {
+  const canvas = stageRef.current.toCanvas();
+  const dataURL = canvas.toDataURL();
+  return dataURL;
+};
+
 export default function App() {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
@@ -75,9 +81,17 @@ export default function App() {
   const [selectedW, setSelectedW] = useState(3 * 88.088012 + "px");
   const [selectedH, setSelectedH] = useState(5 * 88.088012 + "px");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [imageTemplate, setImageTemplate] = useState("");
+  //console.log(selectedTemplate);
+  //console.log(selectedElement);
 
   const applyTemplate = (template) => {
     setCanvasElements(template.elements);
+  };
+
+  const handleCaptureClick = () => {
+    const imageDataURL = captureCanvas(stageRef);
+    return imageDataURL// Aquí puedes hacer lo que quieras con la imagen en base64, como guardarla o mostrarla en el navegador
   };
 
   useEffect(() => {
@@ -394,6 +408,8 @@ export default function App() {
             getCanvasElement={getCanvasElement}
             onChange={onChange}
             setSelectedTemplate={setSelectedTemplate}
+            handleCaptureClick={handleCaptureClick}
+            imageTemplate={imageTemplate}
           />
         </div>
         <div className="col-span-12 md:col-span-8">

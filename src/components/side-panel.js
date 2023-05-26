@@ -35,7 +35,8 @@ export default function SidePanel({
   onChange,
   setSelectedTemplate,
   templates,
-
+  handleCaptureClick,
+  imageTemplate,
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -63,7 +64,10 @@ export default function SidePanel({
       label: 'Templates',
       content: <Templates 
       setSelectedTemplate = {setSelectedTemplate}
-      templates = {templates}
+      templates={templates}
+      handleCaptureClick={handleCaptureClick}
+      imageTemplate={imageTemplate}
+      canvasElements={canvasElements}
     />,
       icon: DeviceMobileIcon,
     },
