@@ -86,114 +86,131 @@ export const LoadField = ({
       </Fragment>
     );
 };
-  
-export default function FieldsEditor({ fields, setCanvasElements }) {
-    const [search, setSearch] = useState("");
-    const [color, setColor] = useState("#000000");
-    const [fontSize, setFontSize] = useState(20);
-    const [fontFamily, setFontFamily] = useState("Arial");
-    const [editedFields, setEditedFields] = useState({});
-    const [selectedFields, setSelectedFields] = useState({});
-    const [editField, setEditField] = useState(""); 
-  
-    const editFieldRef = useRef();
-  
-    const searcher = (e) => {
-      setSearch(e.target.value);
-    };
-  
-    let fieldValues = {};
-    fields.forEach((element) => {
-      fieldValues[element.name] = false;
-    });
-  
-    const [filters, setFilters] = useState(fieldValues);
-  
-    const fieldSelected = Object.keys(selectedFields).join(", ");
-  
-    const results = !search
-      ? Object.keys(filters)
-      : Object.keys(filters).filter((data) =>
-          data.toLowerCase().includes(search.toLowerCase())
-        );
-  
-    const handleCheckboxChange = (e) => {
-      const name = e.target.name;
-      const checked = e.target.checked;
-  
-      if (checked) {
-        setSelectedFields((prevSelectedFields) => ({
-          ...prevSelectedFields,
-          [name]: true,
-        }));
-        setEditField(name);
-        addTextToCanvas(name);
-      } else {
-        setSelectedFields((prevSelectedFields) => {
-          const { [name]: fieldToRemove, ...newSelectedFields } = prevSelectedFields;
-          return newSelectedFields;
-        });
-        setEditField("");
-        removeTextFromCanvas(name);
+
+
+export default function FieldsEditor({ setCanvasElements }) {
+  const [search, setSearch] = useState("");
+  const [color, setColor] = useState("#000000");
+  const [fontSize, setFontSize] = useState(20);
+  const [fontFamily, setFontFamily] = useState("Arial");
+  const [editedFields, setEditedFields] = useState({});
+  const [selectedFields, setSelectedFields] = useState({});
+  const [editField, setEditField] = useState(""); 
+  const [fields, setFields] = useState([]);
+
+  useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/fields`);
+        if (response.ok) {
+          const fieldsData = await response.json();
+          const fieldValues = {};
+          fieldsData.forEach((element) => {
+            fieldValues[element.name] = false;
+          });
+          setFields(fieldValues);
+        } else {
+          console.error('Error fields data:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fields data:', error);
       }
     };
-  
-    const handleEditSubmit = (e, text) => {
-      e.preventDefault();
-      const newText = editFieldRef.current.value;
-      setCanvasElements((prevElements) => {
-        return prevElements.map((element) => {
-          if (element.state.text === text) {
-            return {
-              ...element,
-              state: {
-                ...element.state,
-                text: newText,
-              },
-            };
-          }
-          return element;
-        });
-      });
-      setEditedFields((prevEditedFields) => ({
-        ...prevEditedFields,
-        [text]: newText,
+
+    fetchFields();
+  }, []);
+
+  const handleCheckboxChange = (e) => {
+    const name = e.target.name;
+    const checked = e.target.checked;
+
+    if (checked) {
+      setSelectedFields((prevSelectedFields) => ({
+        ...prevSelectedFields,
+        [name]: true,
       }));
+      setEditField(name);
+      addTextToCanvas(name);
+    } else {
+      setSelectedFields((prevSelectedFields) => {
+        const { [name]: fieldToRemove, ...newSelectedFields } = prevSelectedFields;
+        return newSelectedFields;
+      });
       setEditField("");
-    };
-  
-    const addTextToCanvas = (text) => {
-      setCanvasElements((prev) => {
-        const newElement = {
-          id: Date.now().toString(),
-          type: "Checkbox",
-          draggable: true,
-          isDynamic: true,
-          state: {
-            fill: color,
-            text: text,
-            x: 20,
-            y: 30,
-            fontFamily: fontFamily,
-            fontSize: fontSize,
-          },
-        };
-        return [...prev, newElement];
+      removeTextFromCanvas(name);
+    }
+  };
+
+  const addTextToCanvas = (text) => {
+    setCanvasElements((prev) => {
+      const newElement = {
+        id: Date.now().toString(),
+        type: "Checkbox",
+        draggable: true,
+        isDynamic: true,
+        state: {
+          fill: color,
+          text: text,
+          x: 20,
+          y: 30,
+          fontFamily: fontFamily,
+          fontSize: fontSize,
+        },
+      };
+      return [...prev, newElement];
+    });
+  };
+
+  const removeTextFromCanvas = (text) => {
+    setCanvasElements((prevElements) => {
+      return prevElements.filter((element) => {
+        const elementText = element.state.text;
+        return elementText !== text && elementText !== editedFields[text];
       });
-    };
-  
-    const removeTextFromCanvas = (text) => {
-      setCanvasElements((prevElements) => {
-        return prevElements.filter((element) => {
-          const elementText = element.state.text;
-          return elementText !== text && elementText !== editedFields[text];
-        });
+    });
+    setEditedFields((prevEditedFields) => {
+      const { [text]: fieldToRemove, ...newEditedFields } = prevEditedFields;
+      return newEditedFields;
+    });
+  };
+
+  const searcher = (e) => {
+    setSearch(e.target.value);
+  };
+
+  const fieldSelected = Object.keys(selectedFields).join(", ");
+
+  const results = !search
+    ? Object.keys(fields)
+    : Object.keys(fields).filter((data) =>
+        data.toLowerCase().includes(search.toLowerCase())
+      );
+
+  const handleEditSubmit = (e, text) => {
+    e.preventDefault();
+    const newText = editFieldRef.current.value;
+    setCanvasElements((prevElements) => {
+      return prevElements.map((element) => {
+        if (element.state.text === text) {
+          return {
+            ...element,
+            state: {
+              ...element.state,
+              text: newText,
+            },
+          };
+        }
+        return element;
       });
-      setEditedFields((prevEditedFields) => {
-        const { [text]: fieldToRemove, ...newEditedFields } = prevEditedFields;
-        return newEditedFields;
-      });
-    };
+    });
+    setEditedFields((prevEditedFields) => ({
+      ...prevEditedFields,
+      [text]: newText,
+    }));
+    setEditField("");
+  };
+
+  const editFieldRef = useRef();
    
     return (
       <>
@@ -233,15 +250,15 @@ export default function FieldsEditor({ fields, setCanvasElements }) {
             {fieldSelected}
           </span>
         </p>
-        <div className="overflow-y-auto h-[625px] px-1">
+        <div className="overflow-y-auto h-[610px] px-1">
           {results.map((attribute, index) => (
             <div key={attribute} className="flex items-center">
               <input
                 id={`filter-mobile-${attribute}-${index}`}
                 name={attribute}
-                defaultValue={filters[attribute]}
+                defaultValue={selectedFields[attribute]}
                 type="checkbox"
-                defaultChecked={filters[attribute]}
+                defaultChecked={selectedFields[attribute]}
                 className="h-4 w-4 border-gray-300 rounded text-ft-blue-300 focus:ring-ft-yellow-400"
                 onChange={handleCheckboxChange}
               />
@@ -275,6 +292,6 @@ export default function FieldsEditor({ fields, setCanvasElements }) {
         </div>
       </>
     );
-  }
+}
   
  

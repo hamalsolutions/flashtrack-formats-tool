@@ -53,19 +53,6 @@ const FONT_FAMILY_LIST = [
   { name: 'Verdana', value: 'Verdana' },
 ];
 
-const fields = [
-  { id:1, name: 'QTY', description: 'QTY' },
-  { id:2, name: 'COLOR', description: 'COLOR'   },
-  { id:3, name: 'PCS', description: 'PSC'  },
-  { id:4, name: 'SIZE', description: 'SIZE'  },
-  { id:5, name: 'DESCRIPTION', description: 'DESCRIPTION'  },
-  { id:6, name: 'PRICE', description: 'PRICE'  },
-  { id:7, name: 'UPC', description: 'UPC'  },
-  { id:8, name: 'DEPT', description: 'DEPT'  },
-  { id:9, name: 'CLASS', description: 'CLASS'  },
-  { id:10, name: 'STYLE', description: 'STYLE'  },
-];
-
 const captureCanvas = (stageRef) => {
   const canvas = stageRef.current.toCanvas();
   const dataURL = canvas.toDataURL();
@@ -401,7 +388,6 @@ export default function App() {
             canvasElements={canvasElements}
             setCanvasElements={setCanvasElements}
             selectedElement={selectedElement}
-            fields={fields}
             onSelect={onSelect}
             getCanvasElement={getCanvasElement}
             onChange={onChange}

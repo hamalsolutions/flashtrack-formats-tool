@@ -951,6 +951,10 @@ select {
   height: 625px;
 }
 
+.h-\[610px\] {
+  height: 610px;
+}
+
 .h-full {
   height: 100%;
 }
