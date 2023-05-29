@@ -34,13 +34,16 @@ export default function LayersEditor({
       </p>
       <div className="overflow-y-auto h-[625px] px-1">
         <table>
+          <thead>
           <tr className="ml-1 text-sm font-medium text-gray-700">
             <td></td>
             <td>Type </td>
             <td>Change </td>
           </tr>
+          </thead>
+          <tbody>
           {canvasElements.map((element, index) => (
-            <tr>
+            <tr key={index}>
               <td className="text-sm font-medium text-gray-700">{index + 1}</td>
               <td className="ml-3 min-w-0 flex-1 text-gray-500">
                 <button
@@ -83,6 +86,7 @@ export default function LayersEditor({
               </td>
             </tr>
           ))}
+          </tbody>
         </table>
       </div>
     </>

@@ -3,7 +3,15 @@ import { SketchPicker, TwitterPicker } from "react-color";
 import { useState } from "react";
 
 export default function ColorPalette({ initialColor, onColorChange }) {
-  const [color, setColor] = useState("#ffffff");
+  const [color, setColor] = useState({
+    hex: "#ffffff",
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255,
+      a: 1,
+    },
+  });
   const [showPicker, setShowPicker] = useState(false);
 
   const twitterStyle = {
@@ -18,8 +26,14 @@ export default function ColorPalette({ initialColor, onColorChange }) {
   };
 
   function handleColorChange(newColor) {
-    setColor(newColor.hex);
-    onColorChange(newColor.hex);
+    setColor({
+      hex: newColor.hex,
+      rgb: newColor.rgb,
+    });
+    onColorChange({
+      hex: newColor.hex,
+      rgb: newColor.rgb,
+    });
   }
 
   return (
@@ -42,7 +56,7 @@ export default function ColorPalette({ initialColor, onColorChange }) {
             </button>
             {showPicker && (
               <div className="absolute top-0 left-0 z-10 mt-10">
-                <SketchPicker color={color} onChange={handleColorChange} />
+                <SketchPicker color={color.hex} onChange={handleColorChange} />
               </div>
             )}
           </div>
@@ -56,10 +70,10 @@ export default function ColorPalette({ initialColor, onColorChange }) {
             />
           </div>
         </div>
-        <div className="hidden md:block mt-4">Selected color: {color} </div>
+        <div className="hidden md:block mt-4">Selected color: {color.hex} </div>
         <div
           className="mt-4"
-          style={{ backgroundColor: color, height: "250px" }}
+          style={{ backgroundColor: color.hex, height: "250px" }}
         />
       </div>
     </div>

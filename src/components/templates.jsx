@@ -110,7 +110,7 @@ export default function Templates({ setSelectedTemplate, handleCaptureClick, can
           templates.map((template, index) => (
             <div
               key={index}
-              className="pb-4 flex justify-center items-center "
+              className="pb-4 flex justify-center items-center cursor-pointer"
               onClick={() => handleTemplateClick(template)}
             >
               <img

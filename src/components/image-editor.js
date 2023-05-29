@@ -56,6 +56,7 @@ export const LoadImage = ({
                     onChange({
                         x: node.x(),
                         y: node.y(),
+                        rotation: node.rotation(),
                         width: Math.max(5, node.width() * scaleX),
                         height: Math.max(node.height() * scaleY),
                     });
@@ -84,20 +85,12 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
     const [previewImage, setPreviewImage] = useState(null);
     const barcodeTypeList = [
         "CODE128",
-        "EAN13",
         "UPC",
         "EAN8",
-        "EAN5",
-        "EAN2",
+        "EAN13",
         "CODE39",
-        "ITF14",
         "MSI",
-        "MSI10",
-        "MSI11",
-        "MSI1010",
-        "MSI1110",
-        "pharmacode",
-        "codabar"
+        "ITF14",
     ];
     const validBarcodeWidths = ["1", "2", "3"];
     const validBarcodeHeights = ["50", "100", "200"];
@@ -163,6 +156,11 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
             const newElement = {
                 id: Date.now().toString(),
                 type: "barcode",
+                barcodeValue: barcode,
+                barcodeType: selectedBarcodeType,
+                barcodeDisplayValue: displayValue,
+                barcodeWidth: barcodeWidth,
+                barcodeHeight: barcodeHeight,
                 draggable: true,
                 isDynamic: false,
                 state: {
