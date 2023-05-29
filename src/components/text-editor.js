@@ -3,14 +3,17 @@ import { Transformer, Text } from 'react-konva';
 import { SketchPicker } from "react-color";
 import { ColorSwatchIcon, XIcon } from "@heroicons/react/outline";
 
-const FONT_FAMILY_LIST = [
-  { name: 'Roboto', value: 'Roboto' },
-  { name: 'Arial', value: 'Arial' },
-  { name: 'Verdana', value: 'Verdana' },
-  { name: 'Lato', value: 'Lato' },
-  { name: 'Calibri', value: 'Calibri' },
-  { name: 'Cambria', value: 'Cambria' },
-  { name: 'Helvetica', value: 'Helvetica' },
+export const FONT_FAMILY_LIST = [
+  { name: 'Arial', value: 'Arial', file: "arial.ttf" },
+  { name: 'Arial Bold', value: 'Arial Black', file: "arialbd.ttf" },
+  { name: 'Helvetica', value: 'Helvetica', file: "Helvetica_Neue.ttf" },
+  { name: 'Times New Roman', value: 'Times New Roman', file: "times.ttf" },
+  { name: 'Times New Roman Bold', value: 'Times New Roman Black', file: "timesbd.ttf" },
+  { name: 'Roboto', value: 'Roboto', file: "" },
+  { name: 'Verdana', value: 'Verdana', file: "" },
+  { name: 'Lato', value: 'Lato', file: "" },
+  { name: 'Calibri', value: 'Calibri', file: "" },
+  { name: 'Cambria', value: 'Cambria', file: "" },
 ];
 
 const FONT_SIZE_LIST = [
@@ -118,14 +121,17 @@ export const LoadText = ({
 export default function TextEditor ({fontFamily, setFontFamily, setCanvasElements, selectedElement}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
-  const [newFontName, setNewFontName] = useState(fontFamily);
+  const [newFontName, setNewFontName] = useState('');
   const [newFontFile, setNewFontFile] = useState(null);
   const [customFonts, setCustomFonts] = useState([]); // Lista de fuentes personalizadas
   const [textContent, setTextContent] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [color, setColor] = useState("#000000");
   const [fontSize, setFontSize] = useState(12);
+  const [fontFileName, setFontFileName] = useState("arial.ttf");
   const [error, setError] = useState(false);
+
+  const allFonts = [...FONT_FAMILY_LIST, ...customFonts];
 
   const button = document.getElementById("add-text-button");
 
@@ -178,11 +184,14 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
   }
 
   const handleFontFamilyChange = (event) => {
+    const fontFile = allFonts.find(font => font.value === event.target.value)?.file;
     if (isSelectedElement) {
       updateSelectedElement(selectedElement.id, "fontFamily", event.target.value);
+      updateSelectedElement(selectedElement.id, "fontFile", fontFile ?? "");
     }else{
       setFontFamily(event.target.value);
     }
+    setFontFileName(fontFile);
   };
 
   const handleNewFontNameChange = (event) => {
@@ -260,8 +269,6 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
     setError(false);
   };
 
-  const allFonts = [...FONT_FAMILY_LIST, ...customFonts];
-
   const addTextToCanvas = () => {
     setCanvasElements((prev) => {
         const newElement = {
@@ -276,6 +283,7 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
                 y: 10,
                 fontFamily: fontFamily,
                 fontSize: fontSize,
+                fontFile: fontFileName,
               }
         };
         return [...prev, newElement];
@@ -314,8 +322,8 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
               value={isSelectedElement ? selectedElement.state.fontFamily : fontFamily} 
               onChange={handleFontFamilyChange}
             >
-              {allFonts.map((font) => (
-                <option key={font.value} value={font.value}>
+              {allFonts.map((font, index) => (
+                <option key={index} value={font.value}>
                   {font.name}
                 </option>
               ))}

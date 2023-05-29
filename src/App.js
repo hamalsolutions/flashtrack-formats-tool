@@ -3,10 +3,10 @@ import { Stage, Layer, Rect } from 'react-konva';
 import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
-import { LoadText } from './components/text-editor';
+import { LoadText, FONT_FAMILY_LIST } from './components/text-editor';
 import { LoadField } from './components/fields-editor';
+import { inchesToPixels, centimetersToPixels } from './components/sizelabel-editor';
 import jsPDF from 'jspdf';
-import image1 from './images/example.png';
 import picsumid1 from './images/1.jpg';
 import picsumid2 from './images/2.jpg';
 import picsumid3 from './images/3.jpg';
@@ -16,6 +16,7 @@ import picsumid6 from './images/6.jpg';
 import picsumid7 from './images/7.jpg';
 import picsumid8 from './images/8.jpg';
 import picsumid9 from './images/9.jpg';
+import { ZoomOutIcon, ZoomInIcon } from '@heroicons/react/outline';
 
 export const Background = ({ height, width, color }) => {
   let newWidth = 0;
@@ -47,12 +48,6 @@ export const Background = ({ height, width, color }) => {
   );
 };
 
-const FONT_FAMILY_LIST = [
-  { name: 'Roboto', value: 'Roboto' },
-  { name: 'Arial', value: 'Arial' },
-  { name: 'Verdana', value: 'Verdana' },
-];
-
 const captureCanvas = (stageRef) => {
   const canvas = stageRef.current.toCanvas();
   const dataURL = canvas.toDataURL();
@@ -64,11 +59,22 @@ export default function App() {
   const stageRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] = useState(null);
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
-  const [selectedW, setSelectedW] = useState(3 * 88.088012 + "px");
-  const [selectedH, setSelectedH] = useState(5 * 88.088012 + "px");
+  const [selectedColor, setSelectedColor] = useState({
+    hex: "#ffffff", rgb: { r: 255, g: 255, b: 255, a: 1 }
+  });
+  const [width, setWidth] = useState(3);
+  const [height, setHeight] = useState(5);
+  const [selectedMetric, setSelectedMetric] = useState('in');
+  const [selectedRotation, setSelectedRotation] = useState(0);
+  const [selectedW, setSelectedW] = useState(3 * inchesToPixels);
+  const [selectedH, setSelectedH] = useState(5 * inchesToPixels);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [imageTemplate, setImageTemplate] = useState("");
+  const [zoom, setZoom] = useState(1);
+  // Export options, needed to deselect elements before exporting
+  const [exportType, setExportType] = useState(null);
+  const [exportName, setExportName] = useState(null);
+  const [exportReady, setExportReady] = useState(false);
 
   const applyTemplate = (template) => {
     setCanvasElements(template.elements);
@@ -84,23 +90,6 @@ export default function App() {
       applyTemplate(selectedTemplate);
     }
   }, [selectedTemplate]);
-
-  useEffect(() => {
-    function handleResize() {
-      const container = containerRef.current;
-      if (container) {
-        const { width, height } = container.getBoundingClientRect();
-        setDimensions({ width, height });
-      }
-    }
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [setSelectedW, setSelectedH]);
 
   // listens to the key delete to remove the selected element
   useEffect(() => {
@@ -126,11 +115,75 @@ export default function App() {
   }
 
   function handleChangeW(newWidth) {
-    setSelectedW(newWidth);
+    setSelectedW(newWidth * zoom);
+    if (selectedMetric === 'in') {
+      setWidth(newWidth / inchesToPixels);
+    }
+    if (selectedMetric === 'cm') {
+      setWidth(newWidth / centimetersToPixels);
+    }
   }
 
   function handleChangeH(newHeight) {
-    setSelectedH(newHeight);
+    setSelectedH(newHeight * zoom);
+    if (selectedMetric === 'in') {
+      setHeight(newHeight / inchesToPixels);
+    }
+    if (selectedMetric === 'cm') {
+      setHeight(newHeight / centimetersToPixels);
+    }
+  }
+
+  function handleChangeRotation(newRotation) {
+    setSelectedRotation(newRotation);
+  }
+
+  const handleZoomUp = () => {
+    if (zoom < 2) {
+      setZoom(zoom + 0.1);
+      setSelectedW(selectedW * 1.1);
+      setSelectedH(selectedH * 1.1);
+      const newElements = canvasElements.map((element) => {
+        const fontAttrs = element.type === 'text' ? { fontSize: element.state.fontSize * 1.1 } : {};
+        return {
+          ...element,
+          state: {
+            ...element.state,
+            x: element.state.x * 1.1,
+            y: element.state.y * 1.1,
+            width: element.state.width * 1.1,
+            height: element.state.height * 1.1,
+            ...fontAttrs,
+          },
+        };
+      }
+      );
+      setCanvasElements(newElements);
+    }
+  }
+
+  const handleZoomDown = () => {
+    if (zoom > 1) {
+      setZoom(zoom - 0.1);
+      setSelectedW(selectedW * 0.9);
+      setSelectedH(selectedH * 0.9);
+      const newElements = canvasElements.map((element) => {
+        const fontAttrs = element.type === 'text' ? { fontSize: element.state.fontSize * 0.9 } : {};
+        return {
+          ...element,
+          state: {
+            ...element.state,
+            x: element.state.x * 0.9,
+            y: element.state.y * 0.9,
+            width: element.state.width * 0.9,
+            height: element.state.height * 0.9,
+            ...fontAttrs,
+          },
+        };
+      }
+      );
+      setCanvasElements(newElements);
+    }
   }
 
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
@@ -150,96 +203,81 @@ export default function App() {
 
   const [selectedOption, setSelectedOption] = useState('Download as');
 
-  const handleExportClick = (format, name) => {
-    const isMobile = window.innerWidth <= 768;
+  const handleExportClick = (type, name) => {
+    setSelectedElement(null);
+    setExportType(type);
+    setExportName(name);
+    setExportReady(true);
+  };
+  
+  useEffect(() => {
+    if (exportReady) {
+      const isMobile = window.innerWidth <= 768;
 
-    const fileNameValidator = /^[\w\-. ]+$/gm;
-    let formatName = 'newlabel';
+      const fileNameValidator = /^[\w\-. ]+$/gm;
+      let formatName = 'newlabel';
 
-    if (name && fileNameValidator.test(name)) {
-      formatName = name;
-    }
-
-    setSelectedOption('Download as');
-    if (format === 'pdf') {
-      const stageEx = stageRef.current;
-      const dataURL = stageEx.toDataURL({
-        pixelRatio: window.devicePixelRatio,
-        mimeType: 'image/png',
-        quality: 1,
-      });
-      const doc = new jsPDF('landscape', 'px', [
-        stageEx.width(),
-        stageEx.height(),
-      ]);
-
-      if (isMobile) {
-        const mobileWidth = 300;
-        const mobileHeight = 400;
-        const scaleFactor = Math.min(
-          mobileWidth / stageEx.width(),
-          mobileHeight / stageEx.height()
-        );
-        const scaledWidth = stageEx.width() * scaleFactor;
-        const scaledHeight = stageEx.height() * scaleFactor;
-
-        doc.addImage(dataURL, 'PNG', 0, 0, scaledWidth, scaledHeight);
-      } else {
-        doc.addImage(dataURL, 'PNG', 0, 0, stageEx.width(), stageEx.height());
+      if (exportName && fileNameValidator.test(exportName)) {
+        formatName = exportName;
       }
 
-      doc.save(`${formatName}.pdf`);
-    } else {
-      const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-      const extension = format === 'png' ? 'png' : 'jpg';
+      setSelectedOption('Download as');
+      if (exportType === 'pdf') {
+        const stageEx = stageRef.current;
+        const dataURL = stageEx.toDataURL({
+          pixelRatio: window.devicePixelRatio,
+          mimeType: 'image/png',
+          quality: 1,
+        });
+        const isLandscape = stageEx.width() > stageEx.height();
+        const doc = new jsPDF((isLandscape) ? 'l': 'p', 'px', [
+          stageEx.width(),
+          stageEx.height(),
+        ]);
 
-      const stageEx = stageRef.current;
-      const dataURL = stageEx.toDataURL({
-        pixelRatio: window.devicePixelRatio,
-        mimeType: mimeType,
-        quality: 1,
-      });
+        if (isMobile) {
+          const mobileWidth = 300;
+          const mobileHeight = 400;
+          const scaleFactor = Math.min(
+            mobileWidth / stageEx.width(),
+            mobileHeight / stageEx.height()
+          );
+          const scaledWidth = stageEx.width() * scaleFactor;
+          const scaledHeight = stageEx.height() * scaleFactor;
 
-      const link = document.createElement('a');
-      link.download = `${formatName}.${extension}`;
-      link.href = dataURL;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+          doc.addImage(dataURL, 'PNG', 0, 0, scaledWidth, scaledHeight);
+        } else {
+          doc.addImage(dataURL, 'PNG', 0, 0, stageEx.width(), stageEx.height());
+        }
+
+        doc.save(`${formatName}.pdf`);
+      } else {
+        const mimeType = exportType === 'png' ? 'image/png' : 'image/jpeg';
+        const extension = exportType === 'png' ? 'png' : 'jpg';
+
+        const stageEx = stageRef.current;
+        const dataURL = stageEx.toDataURL({
+          pixelRatio: window.devicePixelRatio,
+          mimeType: mimeType,
+          quality: 1,
+        });
+
+        const link = document.createElement('a');
+        link.download = `${formatName}.${extension}`;
+        link.href = dataURL;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      setExportReady(false);
+      setExportType(null);
+      setExportName(null);
     }
-  };
+  }, [exportReady]);
 
   // CANVAS ELEMENTS, please add all elements you want to render in the canvas
   // I added a text element as an example
-  const [canvasElements, setCanvasElements] = useState([
-    {
-      id: '1',
-      type: 'text',
-      draggable: true,
-      state: {
-        fill: '#000000',
-        isDragging: false,
-        x: 10,
-        y: 50,
-        text: 'Draggable Text',
-        fontFamily: 'Roboto',
-        fontSize: 20,
-      },
-    },
-    {
-      id: '3',
-      type: 'image',
-      draggable: true,
-      state: {
-        isDragging: false,
-        x: 200,
-        y: 200,
-        width: 300,
-        height: 250,
-        url: image1,
-      },
-    },
-  ]);
+  const [canvasElements, setCanvasElements] = useState([]);
 
   // refreshes the selected element when the canvas elements change
   useEffect(() => {
@@ -358,7 +396,8 @@ export default function App() {
   // deselect when clicked on empty area
   const handleDeselectElement = (e) => {
     const clickedOnEmpty = e.target?.attrs?.id === 'background';
-    if (clickedOnEmpty) {
+    const clickedOnGrayArea = e.target?.id === 'grayArea';
+    if (clickedOnEmpty || clickedOnGrayArea) {
       setSelectedElement(null);
     }
   };
@@ -381,6 +420,7 @@ export default function App() {
             onColorChange={handleColorChange}
             onChangeW={handleChangeW}
             onChangeH={handleChangeH}
+            onChangeRotation={handleChangeRotation}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
             imageList={imageList}
@@ -394,6 +434,8 @@ export default function App() {
             setSelectedTemplate={setSelectedTemplate}
             handleCaptureClick={handleCaptureClick}
             imageTemplate={imageTemplate}
+            selectedMetric={selectedMetric}
+            setSelectedMetric={setSelectedMetric}
           />
         </div>
         <div className="col-span-12 md:col-span-8">
@@ -412,30 +454,36 @@ export default function App() {
               width: '100%',
               height: '80vh',
               backgroundColor: '#CDCBCB',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'scroll'
             }}
+            onMouseDown={handleDeselectElement}
+            onTouchStart={handleDeselectElement}
+            id="grayArea"
           >
             <div
               className="containerCanvas"
               ref={containerRef}
               style={{
-                width: selectedW,
-                height: selectedH,
+                width: `${selectedW}px`,
+                height: `${selectedH}px`,
                 margin: '5px',
-                border: '1px solid black',
               }}
             >
               <Stage
-                width={selectedW.substring(0, selectedW.length - 2)}
-                height={selectedH.substring(0, selectedH.length - 2)}
+                width={selectedW}
+                height={selectedH}
                 onMouseDown={handleDeselectElement}
                 onTouchStart={handleDeselectElement}
                 ref={stageRef}
               >
                 <Layer>
                   <Rect
-                    width={selectedW.substring(0, selectedW.length - 2)}
-                    height={selectedH.substring(0, selectedH.length - 2)}
-                    fill={selectedColor}
+                    width={selectedW}
+                    height={selectedH}
+                    fill={selectedColor.hex}
                     id="background"
                   />
                   {/* Esto es solo un ejemplo de drag and drop*/}
@@ -446,29 +494,31 @@ export default function App() {
                   ))}
                 </Layer>
               </Stage>
-              {/* A partir de aqui Zoom*/}
-              {/* 
-            <div className="flex justify-center z-10 -mt-20 md:-mt-11">
-              <span className="isolate inline-flex rounded-md shadow-sm">
-                <button
-                  type="button"
-                  className="relative inline-flex items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10"
-                >
-                  <ZoomOutIcon className="h-5 w-5" aria-hidden="true" />
-                </button>
-                <span className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10">
-                  32%
-                </span>
-                <button
-                  type="button"
-                  className="relative -ml-px inline-flex items-center rounded-r-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10"
-                >
-                  <ZoomInIcon className="h-5 w-5" aria-hidden="true" />
-                </button>
+
+
+            </div>
+          </div>
+          {/* A partir de aqui Zoom*/}
+          <div className="flex justify-center z-10 -mt-20 md:-mt-11">
+            <span className="isolate inline-flex rounded-md shadow-sm">
+              <button
+                type="button"
+                onClick={handleZoomDown}
+                className="relative inline-flex items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10"
+              >
+                <ZoomOutIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <span className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10">
+                { Math.floor(100 * zoom) }%
               </span>
-            </div>
-            */}
-            </div>
+              <button
+                type="button"
+                onClick={handleZoomUp}
+                className="relative -ml-px inline-flex items-center rounded-r-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10"
+              >
+                <ZoomInIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </span>
           </div>
         </div>
       </div>

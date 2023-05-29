@@ -20,6 +20,7 @@ export default function SidePanel({
   onColorChange,
   onChangeW,
   onChangeH,
+  onChangeRotation,
   fontFamily,
   setFontFamily,
   imageList,
@@ -37,12 +38,15 @@ export default function SidePanel({
   templates,
   handleCaptureClick,
   imageTemplate,
+  selectedMetric,
+  setSelectedMetric,
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
-  const [selectedW, setSelectedW] = useState();
-  const [selectedH, setSelectedH] = useState();
+  const [selectedW, setSelectedW] = useState(3);
+  const [selectedH, setSelectedH] = useState(5);
+  const [selectedRotation, setSelectedRotation] = useState(0);
 
   function handleChangeW(newWidth) {
     setSelectedW(newWidth);
@@ -54,6 +58,11 @@ export default function SidePanel({
     onChangeH(newHeight);
   }
 
+  function handleChangeRotation(newRotation) {
+    setSelectedRotation(newRotation);
+    onChangeRotation(newRotation);
+  }
+
   function handleColorChange(newColor) {
     setSelectedColor(newColor);
     onColorChange(newColor);
@@ -63,12 +72,12 @@ export default function SidePanel({
     {
       label: 'Templates',
       content: <Templates 
-      setSelectedTemplate = {setSelectedTemplate}
-      templates={templates}
-      handleCaptureClick={handleCaptureClick}
-      imageTemplate={imageTemplate}
-      canvasElements={canvasElements}
-    />,
+        setSelectedTemplate = {setSelectedTemplate}
+        templates={templates}
+        handleCaptureClick={handleCaptureClick}
+        imageTemplate={imageTemplate}
+        canvasElements={canvasElements}
+      />,
       icon: DeviceMobileIcon,
     },
     {
@@ -134,8 +143,12 @@ export default function SidePanel({
         <SizeLabelEditor
           initialW={selectedW}
           initialH={selectedH}
+          initialRotation={selectedRotation}
           onChangeW={handleChangeW}
           onChangeH={handleChangeH}
+          onChangeRotation={handleChangeRotation}
+          selectedMetric={selectedMetric}
+          setSelectedMetric={setSelectedMetric}
         />
       ),
       icon: ArrowsExpandIcon,
