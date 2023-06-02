@@ -17,7 +17,7 @@ const loadTemplate = async ({ customerId }) => {
   }
 };
 
-const postNewLabelDesign = async function ({ customerId, templateName, imageTemplate, canvasElements }) {
+const postNewLabelDesign = async function ({ customerId, templateName, imageTemplate, format, canvasElements }) {
  
   try {
     const response = await fetch(`${process.env.REACT_APP_API_URL}/newLabels/customer/${customerId}/`, {
@@ -28,7 +28,10 @@ const postNewLabelDesign = async function ({ customerId, templateName, imageTemp
       body: JSON.stringify({
         name: templateName,
         thumbnail: imageTemplate,
-        design: canvasElements,
+        design: {
+          format,
+          elements: canvasElements,
+        },
       }),
     });
 
@@ -45,7 +48,7 @@ const postNewLabelDesign = async function ({ customerId, templateName, imageTemp
   }
 };
 
-export default function Templates({ setSelectedTemplate, handleCaptureClick, canvasElements }) {
+export default function Templates({ setSelectedTemplate, handleCaptureClick, format, canvasElements }) {
   const customerId = 1;
   const [templates, setTemplates] = useState([]);
   const [templateName, setTemplateName] = useState("");
@@ -78,7 +81,7 @@ export default function Templates({ setSelectedTemplate, handleCaptureClick, can
     try {
       
       const imageTemplate = await handleCaptureClick();
-      await postNewLabelDesign({ customerId, templateName, imageTemplate, canvasElements });
+      await postNewLabelDesign({ customerId, templateName, imageTemplate, format, canvasElements });
       await fetchTemplate();
 
     } catch (error) {

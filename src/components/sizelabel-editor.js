@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-export const inchesToPixels = 88.088012;
-export const centimetersToPixels = 37.795280352161;
+export const inchesToPixels = 100;
+export const centimetersToPixels = 39.37007874015748;
 
 export default function SizeLabelEditor({
   initialW,
@@ -84,7 +84,7 @@ export default function SizeLabelEditor({
           />
         </div>
         <br></br>
-        <div className="relative flex">
+        {/* <div className="relative flex">
           <p>Rotation:&nbsp;&nbsp; </p>
           <select onChange={handleRotation} className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400   dark:border-gray-300 dark:placeholder-gray-400 dark:text-gray-800">
             <option value="0">0°</option>
@@ -92,7 +92,7 @@ export default function SizeLabelEditor({
             <option value="270">270°</option>
           </select>
         </div>
-        <br></br>
+        <br></br> */}
         <div className="relative flex">
           <p>Metric:&nbsp;&nbsp; </p>
           <select onChange={handleMetric} className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400   dark:border-gray-300 dark:placeholder-gray-400 dark:text-gray-800">

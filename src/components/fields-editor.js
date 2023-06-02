@@ -9,15 +9,12 @@ export const LoadField = ({
     width,
     height,
     draggable,
-    onDragStart,
-    onDragEnd,
     isSelected,
     onSelect,
     onChange,
     fontFamily,
     fontSize,
-    fill,
-    selectedElement
+    fill
   }) => {
     const textRef = useRef();
     const trRef = useRef();
@@ -43,8 +40,13 @@ export const LoadField = ({
               width={width}
               height={height}
               draggable={draggable}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
+              onDragEnd={(e) => {
+                const node = textRef.current;
+                onChange({
+                    x: node.x(),
+                    y: node.y(),
+                });
+              }}
               onClick={onSelect}
               onTap={onSelect}
               onTransformEnd={(e) => {
@@ -56,6 +58,7 @@ export const LoadField = ({
                 onChange({
                   x: node.x(),
                   y: node.y(),
+                  rotation: node.rotation(),
                   width: Math.max(5, node.width() * scaleX),
                   height: Math.max(node.height() * scaleY),
                 });
@@ -88,11 +91,8 @@ export const LoadField = ({
 };
 
 
-export default function FieldsEditor({ setCanvasElements }) {
+export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
   const [search, setSearch] = useState("");
-  const [color, setColor] = useState("#000000");
-  const [fontSize, setFontSize] = useState(20);
-  const [fontFamily, setFontFamily] = useState("Arial");
   const [editedFields, setEditedFields] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
   const [editField, setEditField] = useState(""); 
@@ -106,7 +106,10 @@ export default function FieldsEditor({ setCanvasElements }) {
           const fieldsData = await response.json();
           const fieldValues = {};
           fieldsData.forEach((element) => {
-            fieldValues[element.name] = false;
+            // ignore QTY
+            if (element.name !== "QTY") {
+              fieldValues[element.name] = false;
+            }
           });
           setFields(fieldValues);
         } else {
@@ -142,35 +145,21 @@ export default function FieldsEditor({ setCanvasElements }) {
   };
 
   const addTextToCanvas = (text) => {
-    setCanvasElements((prev) => {
-      const newElement = {
-        id: Date.now().toString(),
-        type: "Checkbox",
-        draggable: true,
-        isDynamic: true,
-        state: {
-          fill: color,
-          text: text,
-          x: 20,
-          y: 30,
-          fontFamily: fontFamily,
-          fontSize: fontSize,
-        },
-      };
-      return [...prev, newElement];
-    });
-  };
-
-  const removeTextFromCanvas = (text) => {
-    setCanvasElements((prevElements) => {
-      return prevElements.filter((element) => {
-        const elementText = element.state.text;
-        return elementText !== text && elementText !== editedFields[text];
-      });
-    });
-    setEditedFields((prevEditedFields) => {
-      const { [text]: fieldToRemove, ...newEditedFields } = prevEditedFields;
-      return newEditedFields;
+    onChange({
+      id: Date.now().toString(),
+      type: "Checkbox",
+      draggable: true,
+      isDynamic: true,
+      field: text,
+      state: {
+        fill: "#000000",
+        text: text,
+        x: 20,
+        y: 30,
+        rotation: 0,
+        fontFamily: "Arial",
+        fontSize: 20,
+      },
     });
   };
 
@@ -186,28 +175,29 @@ export default function FieldsEditor({ setCanvasElements }) {
         data.toLowerCase().includes(search.toLowerCase())
       );
 
-  const handleEditSubmit = (e, text) => {
-    e.preventDefault();
+  const handleEditSubmit = (field) => {
     const newText = editFieldRef.current.value;
-    setCanvasElements((prevElements) => {
-      return prevElements.map((element) => {
-        if (element.state.text === text) {
-          return {
-            ...element,
-            state: {
-              ...element.state,
-              text: newText,
-            },
-          };
-        }
-        return element;
-      });
+    const element = canvasElements.find((element) => element?.field === field);
+    
+    onChange(element, {
+      text: newText
     });
+
     setEditedFields((prevEditedFields) => ({
       ...prevEditedFields,
-      [text]: newText,
+      [field]: newText,
     }));
     setEditField("");
+  };
+
+  const removeTextFromCanvas = (field) => {
+    const element = canvasElements.find((element) => element?.field === field);
+    onDelete(element);
+
+    setEditedFields((prevEditedFields) => {
+      const { [field]: fieldToRemove, ...newEditedFields } = prevEditedFields;
+      return newEditedFields;
+    });
   };
 
   const editFieldRef = useRef();
@@ -252,7 +242,7 @@ export default function FieldsEditor({ setCanvasElements }) {
         </p>
         <div className="overflow-y-auto h-[610px] px-1">
           {results.map((attribute, index) => (
-            <div key={attribute} className="flex items-center">
+            <div key={index} className="flex items-center">
               <input
                 id={`filter-mobile-${attribute}-${index}`}
                 name={attribute}
@@ -269,10 +259,7 @@ export default function FieldsEditor({ setCanvasElements }) {
                 {attribute}
               </label>
               {editField === attribute && (
-                <form
-                  onSubmit={(e) => handleEditSubmit(e, attribute)}
-                  className="ml-3"
-                >
+                <div>
                   <input
                     type="text"
                     defaultValue={editedFields[attribute] || attribute}
@@ -282,10 +269,11 @@ export default function FieldsEditor({ setCanvasElements }) {
                   <button
                     type="submit"
                     className="ml-2 px-3 py-1 bg-gray-200 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:bg-gray-300"
+                    onClick={() => handleEditSubmit(attribute)}
                   >
                     Edit
                   </button>
-                </form>
+                </div>
               )}
             </div>
           ))}

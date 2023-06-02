@@ -7,46 +7,8 @@ import { LoadText, FONT_FAMILY_LIST } from './components/text-editor';
 import { LoadField } from './components/fields-editor';
 import { inchesToPixels, centimetersToPixels } from './components/sizelabel-editor';
 import jsPDF from 'jspdf';
-import picsumid1 from './images/1.jpg';
-import picsumid2 from './images/2.jpg';
-import picsumid3 from './images/3.jpg';
-import picsumid4 from './images/4.jpg';
-import picsumid5 from './images/5.jpg';
-import picsumid6 from './images/6.jpg';
-import picsumid7 from './images/7.jpg';
-import picsumid8 from './images/8.jpg';
-import picsumid9 from './images/9.jpg';
 import { ZoomOutIcon, ZoomInIcon } from '@heroicons/react/outline';
-
-export const Background = ({ height, width, color }) => {
-  let newWidth = 0;
-  let newX = 0;
-  let newY = 0;
-  let newHeight = 0;
-  if (width < 768) {
-    newWidth = width - width * 0.2;
-    newHeight = height - height * 0.2;
-    newX = (width * 0.2) / 2;
-    newY = 10;
-  } else {
-    newWidth = width - width * 0.3;
-    newHeight = height - height * 0.05;
-    newX = (width * 0.3) / 2;
-    newY = 20;
-  }
-  return (
-    <Rect
-      height={newHeight}
-      width={newWidth}
-      x={newX}
-      y={newY}
-      fill={color}
-      shadowColor={'black'}
-      shadowBlur={10}
-      shadowOpacity={0.5}
-    />
-  );
-};
+import { generatePHP } from './tools/generator';
 
 const captureCanvas = (stageRef) => {
   const canvas = stageRef.current.toCanvas();
@@ -54,30 +16,55 @@ const captureCanvas = (stageRef) => {
   return dataURL;
 };
 
+const defaultCanvasWidth = 3;
+const defaultCanvasHeight = 5;
+const defaultCanvasWidthPx = defaultCanvasWidth * inchesToPixels;
+const defaultCanvasHeightPx = defaultCanvasHeight * inchesToPixels;
+const defaultCanvasColor = {
+  hex: '#ffffff',
+  rgb: { r: 255, g: 255, b: 255, a: 1 }
+}
+const defaultCanvasRotation = 0;
+const defaultCanvasMetric = 'in';
+const defaultCanvasZoom = 1;
+
 export default function App() {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedElement, setSelectedElement] = useState(null);
-  const [selectedColor, setSelectedColor] = useState({
-    hex: "#ffffff", rgb: { r: 255, g: 255, b: 255, a: 1 }
-  });
-  const [width, setWidth] = useState(3);
-  const [height, setHeight] = useState(5);
-  const [selectedMetric, setSelectedMetric] = useState('in');
-  const [selectedRotation, setSelectedRotation] = useState(0);
-  const [selectedW, setSelectedW] = useState(3 * inchesToPixels);
-  const [selectedH, setSelectedH] = useState(5 * inchesToPixels);
+  const [selectedColor, setSelectedColor] = useState(defaultCanvasColor);
+  const [width, setWidth] = useState(defaultCanvasWidth);
+  const [height, setHeight] = useState(defaultCanvasHeight);
+  const [selectedMetric, setSelectedMetric] = useState(defaultCanvasMetric);
+  const [selectedRotation, setSelectedRotation] = useState(defaultCanvasRotation);
+  const [selectedW, setSelectedW] = useState(defaultCanvasWidthPx);
+  const [selectedH, setSelectedH] = useState(defaultCanvasHeightPx);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [imageTemplate, setImageTemplate] = useState("");
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(defaultCanvasZoom);
   // Export options, needed to deselect elements before exporting
   const [exportType, setExportType] = useState(null);
   const [exportName, setExportName] = useState(null);
   const [exportReady, setExportReady] = useState(false);
 
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
+  // maximum amount of elements to store in the undo stack
+  const maxHistoryStackLength = 10;
+
+  // CANVAS ELEMENTS, please add all elements you want to render in the canvas
+  // I added a text element as an example
+  const [canvasElements, setCanvasElements] = useState([]);
+
   const applyTemplate = (template) => {
-    setCanvasElements(template.elements);
+    console.log(template.design.format)
+    setWidth(template.design.format.width);
+    setHeight(template.design.format.height);
+    setSelectedW(template.design.format.widthPx);
+    setSelectedH(template.design.format.heightPx);
+    setSelectedRotation(template.design.format.angle);
+    setSelectedMetric(template.design.format.metric);
+    handleCanvasElementsChange(template.design.elements);
   };
 
   const handleCaptureClick = () => {
@@ -87,20 +74,19 @@ export default function App() {
 
   useEffect(() => {
     if (selectedTemplate) {
+      setZoom(1);
+      setSelectedW(defaultCanvasWidthPx);
+      setSelectedH(defaultCanvasHeightPx);
       applyTemplate(selectedTemplate);
+      setSelectedTemplate(null);
     }
   }, [selectedTemplate]);
 
   // listens to the key delete to remove the selected element
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Delete' && selectedElement) {
-        const newElements = canvasElements.filter(
-          (element) => element.id !== selectedElement.id
-        );
-        setCanvasElements(newElements);
-        setSelectedElement(null);
-      }
+      if (event.key === 'Delete')
+        deleteElementSelected();
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -110,11 +96,11 @@ export default function App() {
     };
   }, [selectedElement]);
 
-  function handleColorChange(newColor) {
+  const handleColorChange = (newColor) => {
     setSelectedColor(newColor);
   }
 
-  function handleChangeW(newWidth) {
+  const handleChangeW = (newWidth) => {
     setSelectedW(newWidth * zoom);
     if (selectedMetric === 'in') {
       setWidth(newWidth / inchesToPixels);
@@ -124,7 +110,7 @@ export default function App() {
     }
   }
 
-  function handleChangeH(newHeight) {
+  const handleChangeH = (newHeight) => {
     setSelectedH(newHeight * zoom);
     if (selectedMetric === 'in') {
       setHeight(newHeight / inchesToPixels);
@@ -134,10 +120,11 @@ export default function App() {
     }
   }
 
-  function handleChangeRotation(newRotation) {
+  const handleChangeRotation = (newRotation) => {
     setSelectedRotation(newRotation);
   }
 
+  // zooms in the canvas and all elements in it
   const handleZoomUp = () => {
     if (zoom < 2) {
       setZoom(zoom + 0.1);
@@ -158,10 +145,15 @@ export default function App() {
         };
       }
       );
-      setCanvasElements(newElements);
+      handleCanvasElementsChange(newElements, {
+        selectedW: selectedW * 1.1,
+        selectedH: selectedH * 1.1,
+        zoom: zoom + 0.1,
+      });
     }
   }
 
+  // zooms out the canvas and all elements in it
   const handleZoomDown = () => {
     if (zoom > 1) {
       setZoom(zoom - 0.1);
@@ -182,24 +174,18 @@ export default function App() {
         };
       }
       );
-      setCanvasElements(newElements);
+      handleCanvasElementsChange(newElements, {
+        selectedW: selectedW * 0.9,
+        selectedH: selectedH * 0.9,
+        zoom: zoom - 0.1
+      });
     }
   }
 
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
 
-  // we must load images from database to this state
-  const [imageList, setImageList] = useState([
-    { url: picsumid1 },
-    { url: picsumid2 },
-    { url: picsumid3 },
-    { url: picsumid4 },
-    { url: picsumid5 },
-    { url: picsumid6 },
-    { url: picsumid7 },
-    { url: picsumid8 },
-    { url: picsumid9 },
-  ]);
+  // we must load images from database to this state or local storage
+  const [imageList, setImageList] = useState([]);
 
   const [selectedOption, setSelectedOption] = useState('Download as');
 
@@ -251,6 +237,27 @@ export default function App() {
         }
 
         doc.save(`${formatName}.pdf`);
+      } else if (exportType === "php") {
+        const phpString = generatePHP(canvasElements, {
+          width:  Math.floor((selectedMetric === 'in') ? width  * inchesToPixels : width  * centimetersToPixels),
+          height: Math.floor((selectedMetric === 'in') ? height * inchesToPixels : height * centimetersToPixels),
+          realWidth: width,
+          realHeight: height,
+          color: {
+            r: selectedColor.rgb.r,
+            g: selectedColor.rgb.g,
+            b: selectedColor.rgb.b,
+          },
+          angle: selectedRotation,
+        });
+        if (phpString) {
+          const link = document.createElement('a');
+          link.download = `${formatName}.php`;
+          link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(phpString);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
       } else {
         const mimeType = exportType === 'png' ? 'image/png' : 'image/jpeg';
         const extension = exportType === 'png' ? 'png' : 'jpg';
@@ -275,10 +282,6 @@ export default function App() {
     }
   }, [exportReady]);
 
-  // CANVAS ELEMENTS, please add all elements you want to render in the canvas
-  // I added a text element as an example
-  const [canvasElements, setCanvasElements] = useState([]);
-
   // refreshes the selected element when the canvas elements change
   useEffect(() => {
     if (selectedElement) {
@@ -289,13 +292,16 @@ export default function App() {
     }
   }, [selectedElement, canvasElements]);
 
-  // This function is called when the user changes the size of an element
-  // updates the width and height of the element or any other element attributes
-  const onChange = (element, stateAttrs, mainAttrs = {}) => {
+  // This function is called when the user changes an element
+  // updates the attributes of the element or any other element attributes
+  // or creates a new one if it doesn't exist
+  const onChange = (element, stateAttrs = {}, mainAttrs = {}) => {
     if (element) {
-      setCanvasElements((prevState) => {
-        const index = prevState.findIndex((item) => item.id === element.id);
-        const newElements = [...prevState];
+      const index = canvasElements.findIndex((item) => item.id === element.id);
+      const newElements = [...canvasElements];
+      if (index === -1) {
+        newElements.push(element);
+      } else {
         newElements[index] = {
           ...newElements[index],
           ...mainAttrs,
@@ -304,34 +310,34 @@ export default function App() {
             ...stateAttrs,
           },
         };
-        return newElements;
-      });
+      }
+      handleCanvasElementsChange(newElements);
     }
   };
 
-  // This function is called when the user starts dragging an element
-  // sets the element state to isDragging = true
-  const onDragStart = (element) => {
-    onChange(element, {
-      isDragging: true,
-    });
-  };
-
-  // This function is called when the user stops dragging an element
-  // sets the element state to isDragging = false and updates the x and y coordinates
-  const onDragEnd = (e, element) => {
-    onChange(element, {
-      //isDragging: false,
-      x: e.target.x(),
-      y: e.target.y(),
-    });
-  };
+  // this functions is called when the user wants to delete an element
+  // removes the element from the canvasElements array
+  const onDelete = (element) => {
+    const newElements = canvasElements.filter(
+      (item) => item.id !== element.id
+    );
+    handleCanvasElementsChange(newElements);
+  }
 
   // This function is called when the user clicks on an element
   // sets the selectedElement state to the element that was clicked
   const onSelect = (element) => {
     setSelectedElement(element);
   };
+
+  // deletes the selected element
+  const deleteElementSelected = () => {
+    if (selectedElement) {
+      setSelectedElement(null);
+      onDelete(selectedElement);
+    }
+  };
+  
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
     if (element.type === 'text') {
@@ -345,8 +351,6 @@ export default function App() {
           fontSize={element.state.fontSize}
           draggable={element.draggable}
           fill={element.state.fill}
-          onDragStart={() => onDragStart(element)}
-          onDragEnd={(e) => onDragEnd(e, element)}
           onSelect={() => onSelect(element)}
           isSelected={selectedElement && selectedElement.id === element.id}
           onChange={(newAttrs) => onChange(element, newAttrs)}
@@ -364,8 +368,6 @@ export default function App() {
           fontSize={element.state.fontSize}
           draggable={element.draggable}
           fill={element.state.fill}
-          onDragStart={() => onDragStart(element)}
-          onDragEnd={(e) => onDragEnd(e, element)}
           onSelect={() => onSelect(element)}
           isSelected={selectedElement && selectedElement.id === element.id}
           onChange={(newAttrs) => onChange(element, newAttrs)}
@@ -382,11 +384,10 @@ export default function App() {
           width={element.state.width}
           height={element.state.height}
           draggable={element.draggable}
-          onDragStart={() => onDragStart(element)}
-          onDragEnd={(e) => onDragEnd(e, element)}
           isSelected={selectedElement && selectedElement.id === element.id}
           onSelect={() => onSelect(element)}
           onChange={(newAttrs) => onChange(element, newAttrs)}
+          isBarcode={element.type === 'barcode'}
         />
       );
     }
@@ -402,14 +403,48 @@ export default function App() {
     }
   };
 
-  const handleDynamicElement = (element, checked) => {
-    onChange(
-      element,
-      {},
-      {
-        isDynamic: checked,
+  // undo and re do functions
+  const handleUndo = () => {
+    if (undoStack.length > 0) {
+      const previousElements = undoStack.slice(0, -1);
+      const lastCanvasElements = undoStack.slice(-1)[0];
+      const lastPreviousElement = previousElements.slice(-1)[0] ?? null;
+      setUndoStack(previousElements);
+      setRedoStack((prevStack) => [lastCanvasElements, ...prevStack]);
+      if (lastPreviousElement) {
+        setZoom(lastPreviousElement.window.zoom);
+        setSelectedW(lastPreviousElement.window.selectedW);
+        setSelectedH(lastPreviousElement.window.selectedH);
+        setCanvasElements(lastPreviousElement.elements);
       }
-    );
+    }
+  };
+  
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const nextElement = redoStack[0];
+      const updatedRedoStack = redoStack.slice(1);
+      setRedoStack(updatedRedoStack);
+      setUndoStack((prevStack) => [...prevStack, {
+        window: { zoom, selectedW, selectedH },
+        elements: canvasElements
+      }]);
+      if (nextElement) {
+        setZoom(nextElement.window.zoom);
+        setSelectedW(nextElement.window.selectedW);
+        setSelectedH(nextElement.window.selectedH);
+        setCanvasElements(nextElement.elements);
+      }
+    }
+  };
+
+  const handleCanvasElementsChange = (newElements, extraParams = null) => {
+    setCanvasElements(newElements);
+    setUndoStack((prevStack) => [...prevStack, {
+      window: (extraParams) ? extraParams : { zoom, selectedW, selectedH },
+      elements: newElements
+    }].slice(-maxHistoryStackLength));
+    setRedoStack([]);
   };
 
   return (
@@ -426,27 +461,35 @@ export default function App() {
             imageList={imageList}
             setImageList={setImageList}
             canvasElements={canvasElements}
-            setCanvasElements={setCanvasElements}
             selectedElement={selectedElement}
             onSelect={onSelect}
             getCanvasElement={getCanvasElement}
             onChange={onChange}
+            onDelete={onDelete}
             setSelectedTemplate={setSelectedTemplate}
             handleCaptureClick={handleCaptureClick}
-            imageTemplate={imageTemplate}
             selectedMetric={selectedMetric}
             setSelectedMetric={setSelectedMetric}
+            format={{ 
+              widthPx: selectedW, 
+              heightPx: selectedH, 
+              width: width,
+              height: height,
+              metric: selectedMetric, 
+              angle: selectedRotation 
+            }}
           />
         </div>
         <div className="col-span-12 md:col-span-8">
           <ToolbarLabel
             selectedElement={selectedElement}
-            handleDynamicElement={handleDynamicElement}
-            canvasElements={canvasElements}
-            setCanvasElements={setCanvasElements}
-            setSelectedElement={setSelectedElement}
+            deleteElementSelected={deleteElementSelected}
             handleExportClick={handleExportClick}
             selectedOption={selectedOption}
+            undoStackLength={undoStack.length}
+            redoStackLength={redoStack.length}
+            handleUndo={handleUndo}
+            handleRedo={handleRedo}
           />
           {/* A partir de aqui Canvas*/}
           <div
@@ -486,7 +529,6 @@ export default function App() {
                     fill={selectedColor.hex}
                     id="background"
                   />
-                  {/* Esto es solo un ejemplo de drag and drop*/}
                   {canvasElements.map((element) => (
                     <Fragment key={element.id}>
                       {getCanvasElement(element)}

@@ -12,11 +12,10 @@ export const LoadImage = ({
     width,
     height,
     draggable,
-    onDragStart,
-    onDragEnd,
     isSelected,
     onSelect,
-    onChange
+    onChange,
+    isBarcode
 }) => {
     const imageRef = useRef();
     const trRef = useRef();
@@ -39,17 +38,28 @@ export const LoadImage = ({
                 width={width}
                 height={height}
                 draggable={draggable}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
+                onDragEnd={(e) => {
+                    const node = imageRef.current;
+                    onChange({
+                        x: node.x(),
+                        y: node.y(),
+                    });
+                }}
                 id={id}
                 onClick={onSelect}
                 onTap={onSelect}
                 image={image}
-
                 onTransformEnd={(e) => {
                     const node = imageRef.current;
                     const scaleX = node.scaleX();
                     const scaleY = node.scaleY();
+                    let width = Math.max(5, node.width() * scaleX);
+                    let height = Math.max(node.height() * scaleY);
+
+                    if (isBarcode) {
+                        width = node.width();
+                        height = node.height();
+                    }
 
                     node.scaleX(1);
                     node.scaleY(1);
@@ -57,8 +67,8 @@ export const LoadImage = ({
                         x: node.x(),
                         y: node.y(),
                         rotation: node.rotation(),
-                        width: Math.max(5, node.width() * scaleX),
-                        height: Math.max(node.height() * scaleY),
+                        width,
+                        height,
                     });
                 }}
             />
@@ -77,21 +87,20 @@ export const LoadImage = ({
     );
 };
 
-export default function ImageEditor({ imageList, setImageList, setCanvasElements }) {
+export default function ImageEditor({ imageList, setImageList, onChange }) {
     const [view, setView] = useState("images");
     // Barcode
     const [barcode, setBarcode] = useState("");
-    const [selectedBarcodeType, setSelectedBarcodeType] = useState("CODE128");
-    const [previewImage, setPreviewImage] = useState(null);
     const barcodeTypeList = [
-        "CODE128",
-        "UPC",
-        "EAN8",
-        "EAN13",
-        "CODE39",
-        "MSI",
-        "ITF14",
+        { key: "128", value: "CODE128" },
+        { key: "39",  value: "CODE39" },
+        { key: "UPC", value: "UPC" },
+        { key: "EAN8", value: "EAN8" },
+        { key: "EAN13", value: "EAN13" },
+        { key: "MSI", value: "MSI" },
     ];
+    const [selectedBarcodeType, setSelectedBarcodeType] = useState(barcodeTypeList[0]);
+    const [previewImage, setPreviewImage] = useState(null);
     const validBarcodeWidths = ["1", "2", "3"];
     const validBarcodeHeights = ["50", "100", "200"];
     const [displayValue, setDisplayValue] = useState(false);
@@ -105,14 +114,16 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
 
     useEffect(() => {
         try {
-            if (barcode !== null && barcode !== "" && selectedBarcodeType !== null) {
+            if (barcode !== null && barcode !== "" && selectedBarcodeType !== null && !!selectedBarcodeType?.value) {
                 setMessage(null);
                 var canvas = createCanvas();
                 JsBarcode(canvas, barcode, {
-                    format: selectedBarcodeType,
+                    format: selectedBarcodeType.value,
                     width: barcodeWidth,
                     height: barcodeHeight,
-                    displayValue: displayValue
+                    displayValue: displayValue,
+                    flat: true,
+                    margin: 0
                 });
                 setPreviewImage({
                     url: canvas.toDataURL(),
@@ -132,47 +143,43 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
     }, [barcode, selectedBarcodeType, barcodeWidth, barcodeHeight, displayValue]);
 
     const addImageToCanvas = (image) => () => {
-        setCanvasElements((prev) => {
-            const newElement = {
-                id: Date.now().toString(),
-                type: "image",
-                draggable: true,
-                isDynamic: false,
-                state: {
-                    isDragging: false,
-                    x: 0,
-                    y: 0,
-                    url: image.url,
-                    width: image.width,
-                    height: image.height,
-                }
-            };
-            return [...prev, newElement];
+        onChange({
+            id: Date.now().toString(),
+            type: "image",
+            draggable: true,
+            isDynamic: false,
+            state: {
+                isDragging: false,
+                x: 0,
+                y: 0,
+                rotation: 0,
+                url: image.url,
+                width: image.width,
+                height: image.height,
+            }
         });
     }
 
     const addBarcodeToCanvas = (barcodeImage) => () => {
-        setCanvasElements((prev) => {
-            const newElement = {
-                id: Date.now().toString(),
-                type: "barcode",
-                barcodeValue: barcode,
-                barcodeType: selectedBarcodeType,
-                barcodeDisplayValue: displayValue,
-                barcodeWidth: barcodeWidth,
-                barcodeHeight: barcodeHeight,
-                draggable: true,
-                isDynamic: false,
-                state: {
-                    isDragging: false,
-                    x: 0,
-                    y: 0,
-                    url: barcodeImage.url,
-                    width: width,
-                    height: height,
-                }
-            };
-            return [...prev, newElement];
+        onChange({
+            id: Date.now().toString(),
+            type: "barcode",
+            barcodeValue: barcode,
+            barcodeType: selectedBarcodeType.key,
+            barcodeDisplayValue: displayValue,
+            barcodeWidth: barcodeWidth,
+            barcodeHeight: barcodeHeight,
+            draggable: true,
+            isDynamic: false,
+            state: {
+                isDragging: false,
+                x: 0,
+                y: 0,
+                rotation: 0,
+                url: barcodeImage.url,
+                width: width,
+                height: height,
+            }
         });
     }
 
@@ -185,22 +192,6 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
             const url = 'data:image/png;base64,' + imageData;
             let imgWidth = 200;
             let imgHeight = 200;
-            if (width !== null && width !== undefined && width !== "") {
-                if (width < 10)
-                    imgWidth = 10;
-                else if (width > 1000)
-                    imgWidth = 1000;
-                else
-                    imgWidth = width;
-            }
-            if (height !== null && height !== undefined && height !== "") {
-                if (height < 10)
-                    imgHeight = 10;
-                else if (height > 1000)
-                    imgHeight = 1000;
-                else
-                    imgHeight = height;
-            }
             const img = { url, width: imgWidth, height: imgHeight };
             if (view === "images") {
                 setImageList([...imageList, img]);
@@ -208,25 +199,10 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
         }
     }
 
-    // const handleWidth = (e) => {
-    //     const re = /^[0-9\b]+$/;
-    //     if (e.target.value === '' || re.test(e.target.value)) {
-    //         if (e.target.value == "")
-    //             setWidth("");
-    //         else
-    //             setWidth(parseInt(e.target.value));
-    //     }
-    // }
-
-    // const handleHeight = (e) => {
-    //     const re = /^[0-9\b]+$/;
-    //     if (e.target.value === '' || re.test(e.target.value)) {
-    //         if (e.target.value == "")
-    //             setHeight("");
-    //         else
-    //             setHeight(parseInt(e.target.value));
-    //     }
-    // }
+    const handleBarcodeTypeChange = (e) => {
+        const barcodeType = barcodeTypeList.find((type) => type.value === e.target.value);
+        setSelectedBarcodeType(barcodeType);
+    }
 
     const resetImageSize = () => {
         if (view === "images") {
@@ -258,7 +234,7 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
             {view === "images" && (
                 <label className="block text-gray-700 text-sm font-bold mb-4 mt-2 pb-4 mb-2 border-b border-slate-200">
                     Upload an image:
-                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e)} />
+                    <input type="file" className="hidden" accept="image/jpeg, image/png, image/gif" onChange={(e) => handleImageUpload(e)} />
                     <span className="ml-2 inline-block bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg cursor-pointer">
                         Choose file
                     </span>
@@ -370,11 +346,11 @@ export default function ImageEditor({ imageList, setImageList, setCanvasElements
                                     id="barcode-type"
                                     name="barcode-type"
                                     className="h-full rounded-md border-0 bg-transparent py-0 pl-2 pr-7 text-gray-500 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
-                                    defaultValue={selectedBarcodeType}
-                                    onChange={(event) => setSelectedBarcodeType(event.target.value)}
+                                    defaultValue={selectedBarcodeType.value}
+                                    onChange={handleBarcodeTypeChange}
                                 >
                                     {barcodeTypeList.map((type, index) => (
-                                        <option key={index} value={type}>{type}</option>
+                                        <option key={index} value={type.value}>{type.value}</option>
                                     ))}
                                 </select>
                             </div>

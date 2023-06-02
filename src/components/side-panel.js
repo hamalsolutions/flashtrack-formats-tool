@@ -25,28 +25,25 @@ export default function SidePanel({
   setFontFamily,
   imageList,
   setImageList,
-  barcodeImageList,
-  setBarcodeImageList,
-  fields,
   canvasElements,
-  setCanvasElements,
   selectedElement,
   onSelect,
   getCanvasElement,
   onChange,
+  onDelete,
   setSelectedTemplate,
   templates,
   handleCaptureClick,
-  imageTemplate,
   selectedMetric,
   setSelectedMetric,
+  format,
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
-  const [selectedW, setSelectedW] = useState(3);
-  const [selectedH, setSelectedH] = useState(5);
-  const [selectedRotation, setSelectedRotation] = useState(0);
+  const [selectedW, setSelectedW] = useState(format.width);
+  const [selectedH, setSelectedH] = useState(format.height);
+  const [selectedRotation, setSelectedRotation] = useState(format.angle);
 
   function handleChangeW(newWidth) {
     setSelectedW(newWidth);
@@ -71,13 +68,15 @@ export default function SidePanel({
   const tabs = [
     {
       label: 'Templates',
-      content: <Templates 
-        setSelectedTemplate = {setSelectedTemplate}
-        templates={templates}
-        handleCaptureClick={handleCaptureClick}
-        imageTemplate={imageTemplate}
-        canvasElements={canvasElements}
-      />,
+      content: (
+        <Templates 
+          setSelectedTemplate = {setSelectedTemplate}
+          templates={templates}
+          handleCaptureClick={handleCaptureClick}
+          format={format}
+          canvasElements={canvasElements}
+        />
+      ),
       icon: DeviceMobileIcon,
     },
     {
@@ -86,7 +85,8 @@ export default function SidePanel({
         <TextEditor
           setFontFamily={setFontFamily}
           fontFamily={fontFamily}
-          setCanvasElements={setCanvasElements}
+          canvasElements={canvasElements}
+          onChange={onChange}
           selectedElement={selectedElement}
         />
       ),
@@ -98,9 +98,7 @@ export default function SidePanel({
         <ImageEditor
           imageList={imageList}
           setImageList={setImageList}
-          barcodeImageList={barcodeImageList}
-          setBarcodeImageList={setBarcodeImageList}
-          setCanvasElements={setCanvasElements}
+          onChange={onChange}
         />
       ),
       icon: PhotographIcon,
@@ -112,7 +110,13 @@ export default function SidePanel({
     },*/
     {
       label: 'Fields',
-      content: <FieldsEditor fields={fields} setCanvasElements={setCanvasElements} />,
+      content: (
+        <FieldsEditor 
+          canvasElements={canvasElements}
+          onChange={onChange} 
+          onDelete={onDelete}
+        />
+      ),
       icon: TagIcon,
     },
     {
