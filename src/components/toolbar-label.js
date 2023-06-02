@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Disclosure } from '@headlessui/react';
 import {
   TrashIcon,
@@ -6,42 +6,21 @@ import {
   ArrowNarrowRightIcon,
 } from '@heroicons/react/outline';
 
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
+
 export default function ToolbarLabel({
   selectedElement,
-  handleDynamicElement,
-  canvasElements,
-  setCanvasElements,
-  setSelectedElement,
+  deleteElementSelected,
   handleExportClick,
   selectedOption,
+  undoStackLength,
+  redoStackLength,
+  handleUndo,
+  handleRedo,
 }) {
-  const [checked, setChecked] = useState(false);
   const [formatName, setFormatName] = useState('newlabel');
-  const isSelected = !!selectedElement;
-
-  useEffect(() => {
-    const isChecked = isSelected ? selectedElement.isDynamic || false : false;
-    setChecked(isChecked);
-  }, [selectedElement, isSelected]);
-
-  const markCheckbox = (e) => {
-    if (selectedElement) {
-      handleDynamicElement(selectedElement, e.target.checked);
-      setChecked(e.target.checked);
-    } else {
-      setChecked(false);
-    }
-  };
-
-  const deleteElementSelected = () => {
-    if (selectedElement) {
-      const elements = canvasElements.filter(
-        (element) => element.id !== selectedElement.id
-      );
-      setCanvasElements(elements);
-      setSelectedElement(null);
-    }
-  };
 
   return (
     <div>
@@ -53,9 +32,14 @@ export default function ToolbarLabel({
                 <div className="flex flex-shrink-0 items-center">
                   <button
                     type="button"
-                    className="rounded-full bg-white p-1 text-ft-blue-300 hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    onClick={handleUndo}
+                    className={classNames(
+                      (undoStackLength === 0 || !undoStackLength) ? "opacity-50 text-[#a8a29e]" : "hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800",
+                      "rounded-full bg-white p-1 text-blue-300"
+                    )}
+                    disabled={undoStackLength === 0 || !undoStackLength}
                   >
-                    <span className="sr-only">View notifications</span>
+                    <span className="sr-only">Undo</span>
                     <ArrowNarrowLeftIcon
                       className="h-5 w-5"
                       aria-hidden="true"
@@ -63,9 +47,14 @@ export default function ToolbarLabel({
                   </button>
                   <button
                     type="button"
-                    className="rounded-full bg-white p-1 text-ft-blue-300 hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    onClick={handleRedo}
+                    className={classNames(
+                      (redoStackLength === 0 || !redoStackLength) ? "opacity-50 text-[#a8a29e]" : "hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800",
+                      "rounded-full bg-white p-1 text-blue-300"
+                    )}
+                    disabled={redoStackLength === 0 || !redoStackLength}
                   >
-                    <span className="sr-only">View notifications</span>
+                    <span className="sr-only">Redo</span>
                     <ArrowNarrowRightIcon
                       className="h-5 w-5"
                       aria-hidden="true"
@@ -135,6 +124,7 @@ export default function ToolbarLabel({
                     <option value="png">PNG</option>
                     <option value="jpg">JPG</option>
                     <option value="pdf">PDF</option>
+                    <option value="php">PHP</option>
                   </select>
                 </div>
               </div>

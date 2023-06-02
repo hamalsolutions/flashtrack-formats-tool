@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { Transformer, Text } from 'react-konva';
+import { Text as konvaText } from 'konva';
 import { SketchPicker } from "react-color";
 import { ColorSwatchIcon, XIcon } from "@heroicons/react/outline";
 
@@ -41,8 +42,6 @@ export const LoadText = ({
   width,
   height,
   draggable,
-  onDragStart,
-  onDragEnd,
   isSelected,
   onSelect,
   onChange,
@@ -75,8 +74,13 @@ export const LoadText = ({
             width={width}
             height={height}
             draggable={draggable}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
+            onDragEnd={(e) => {
+              const node = textRef.current;
+              onChange({
+                  x: node.x(),
+                  y: node.y(),
+              });
+            }}
             onClick={onSelect}
             onTap={onSelect}
             onTransformEnd={(e) => {
@@ -88,6 +92,7 @@ export const LoadText = ({
               onChange({
                 x: node.x(),
                 y: node.y(),
+                rotation: node.rotation(),
                 width: Math.max(5, node.width() * scaleX),
                 height: Math.max(node.height() * scaleY),
               });
@@ -118,7 +123,7 @@ export const LoadText = ({
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, setCanvasElements, selectedElement}){
+export default function TextEditor ({fontFamily, setFontFamily, canvasElements, onChange, selectedElement}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState('');
@@ -167,28 +172,21 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
 
   //Permite modificar el elemento seleccionado
   const updateSelectedElement = (id, property, value) => {
-    setCanvasElements((prevElements) => {
-      return prevElements.map((obj) => {
-        if (obj.id === id) {
-          return {
-            ...obj,
-            state: {
-              ...obj.state,
-              [property]: value,
-            },
-          };
-        }
-        return obj;
-      });
-    });
+    const element = canvasElements.find((element) => element.id === id);
+    const stateAttrs = Array.isArray(property) > 0 
+      ? property.reduce((acc, curr, index) => {
+          acc[curr] = value[index];
+          return acc;
+        }, {}) 
+      : { [property]: value };
+    onChange(element, stateAttrs);
   }
 
   const handleFontFamilyChange = (event) => {
     const fontFile = allFonts.find(font => font.value === event.target.value)?.file;
     if (isSelectedElement) {
-      updateSelectedElement(selectedElement.id, "fontFamily", event.target.value);
-      updateSelectedElement(selectedElement.id, "fontFile", fontFile ?? "");
-    }else{
+      updateSelectedElement(selectedElement.id, ["fontFamily", "fontFile"], [event.target.value, fontFile]);
+    } else {
       setFontFamily(event.target.value);
     }
     setFontFileName(fontFile);
@@ -200,6 +198,8 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
 
   const handleNewFontFileChange = (event) => {
     setNewFontFile(event.target.files[0]);
+    const fileName = event.target.files[0].name;
+    setFontFileName(fileName);
   };
     
   function handleView(view) {
@@ -240,7 +240,7 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
 
   const handleTextSizeSelect = (event) => {
     if (isSelectedElement) {
-      updateSelectedElement(selectedElement.id, "fontSize", event.target.value);
+      updateSelectedElement(selectedElement.id, "fontSize", Number(event.target.value));
     }else{
       setFontSize(parseInt(event.target.value));
     }
@@ -270,23 +270,30 @@ export default function TextEditor ({fontFamily, setFontFamily, setCanvasElement
   };
 
   const addTextToCanvas = () => {
-    setCanvasElements((prev) => {
-        const newElement = {
-            id: Date.now().toString(),
-            type: "text",
-            draggable: true,
-            isDynamic: true,
-            state: {
-                fill: color,
-                text: textContent,
-                x: 10,
-                y: 10,
-                fontFamily: fontFamily,
-                fontSize: fontSize,
-                fontFile: fontFileName,
-              }
-        };
-        return [...prev, newElement];
+    const attrs = { 
+      x: 10, 
+      y: 10, 
+      text: textContent, 
+      fontSize: fontSize, 
+      fontFamily: fontFamily, 
+      fill: color 
+    };
+    // create text to calculate width and height
+    const newText = new konvaText(attrs);
+    const width = newText.width();
+    const height = newText.height();
+    onChange({
+      id: Date.now().toString(),
+      type: "text",
+      draggable: true,
+      isDynamic: true,
+      state: {
+        ...attrs,
+        width,
+        height,
+        rotation: 0,
+        fontFile: fontFileName,
+      }
     });
   }
 
