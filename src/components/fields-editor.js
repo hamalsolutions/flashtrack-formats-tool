@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { Transformer, Text } from 'react-konva';
+import { Text as konvaText } from 'konva';
 
 export const LoadField = ({
     id,
@@ -145,6 +146,19 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
   };
 
   const addTextToCanvas = (text) => {
+    const attrs = { 
+      x: 20, 
+      y: 30, 
+      text: text, 
+      fontSize: 20, 
+      fontFile: "arial.ttf",
+      fontFamily: "Arial", 
+      fill: "#000000" 
+    };
+    // create text to calculate width and height
+    const newText = new konvaText(attrs);
+    const width = newText.width();
+    const height = newText.height();
     onChange({
       id: Date.now().toString(),
       type: "Checkbox",
@@ -152,13 +166,10 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
       isDynamic: true,
       field: text,
       state: {
-        fill: "#000000",
-        text: text,
-        x: 20,
-        y: 30,
+        ...attrs,
+        width,
+        height,
         rotation: 0,
-        fontFamily: "Arial",
-        fontSize: 20,
       },
     });
   };
