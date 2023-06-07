@@ -1,17 +1,44 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import styles from "./tailwind.css";
+import { enc, SHA256 } from "crypto-js";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+export function links() {
+  return [{ rel: "stylesheet", href: styles }];
+}
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+const AppContainer = () => {
+  const [validCode, setValidCode] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [salt, setSalt] = useState("");
+
+  useEffect(() => {
+    const sharedKey = 'flastrack_create_labels' ; // Clave compartida entre ambas aplicaciones
+    const newSalt = new URLSearchParams(window.location.search).get("salt") || "";
+    const newCode = SHA256(sharedKey + newSalt).toString(enc.Hex);
+
+    setGeneratedCode(newCode);
+    setSalt(newSalt);
+  }, []);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const receivedCode = urlParams.get("token"); 
+    const isValid = receivedCode === generatedCode;
+
+    setValidCode(isValid);
+  }, [generatedCode]);
+
+  if (window !== window.top && validCode) {
+    return (
+      <React.StrictMode>
+        <App salt={salt} />
+      </React.StrictMode>
+    );
+  } else {
+    return null;
+  }
+};
+
+createRoot(document.getElementById('root')).render(<AppContainer />);
