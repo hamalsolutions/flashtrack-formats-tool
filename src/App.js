@@ -57,7 +57,6 @@ export default function App() {
   const [canvasElements, setCanvasElements] = useState([]);
 
   const applyTemplate = (template) => {
-    console.log(template.design.format)
     setWidth(template.design.format.width);
     setHeight(template.design.format.height);
     setSelectedW(template.design.format.widthPx);
@@ -85,7 +84,7 @@ export default function App() {
   // listens to the key delete to remove the selected element
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Delete')
+      if (event.key === 'Delete' && selectedElement?.type !== 'text' && selectedElement?.type !== 'Checkbox')
         deleteElementSelected();
     };
 
@@ -183,6 +182,7 @@ export default function App() {
   }
 
   const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
+  const [fontSize, setFontSize] = useState(48);
 
   // we must load images from database to this state or local storage
   const [imageList, setImageList] = useState([]);
@@ -458,6 +458,8 @@ export default function App() {
             onChangeRotation={handleChangeRotation}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
             imageList={imageList}
             setImageList={setImageList}
             canvasElements={canvasElements}
@@ -490,6 +492,8 @@ export default function App() {
             redoStackLength={redoStack.length}
             handleUndo={handleUndo}
             handleRedo={handleRedo}
+            canvasElements={canvasElements}
+            onChange={onChange}
           />
           {/* A partir de aqui Canvas*/}
           <div

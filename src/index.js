@@ -30,15 +30,15 @@ const AppContainer = () => {
     setValidCode(isValid);
   }, [generatedCode]);
 
-  if (window !== window.top && validCode) {
+  // if (window !== window.top && validCode) {
     return (
       <React.StrictMode>
         <App salt={salt} />
       </React.StrictMode>
     );
-  } else {
-    return null;
-  }
+  // } else {
+  //   return null;
+  // }
 };
 
 createRoot(document.getElementById('root')).render(<AppContainer />);
