@@ -3,6 +3,8 @@ import { Transformer, Text } from 'react-konva';
 import { Text as konvaText } from 'konva';
 import { SketchPicker } from "react-color";
 import { ColorSwatchIcon, XIcon } from "@heroicons/react/outline";
+import { Listbox, Transition, Combobox } from '@headlessui/react';
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/solid';
 
 export const FONT_FAMILY_LIST = [
   { name: 'Arial', value: 'Arial', file: "arial.ttf" },
@@ -17,7 +19,7 @@ export const FONT_FAMILY_LIST = [
   { name: 'Cambria', value: 'Cambria', file: "" },
 ];
 
-const FONT_SIZE_LIST = [
+export const FONT_SIZE_LIST = [
   { value: 8 },
   { value: 9 },
   { value: 10 },
@@ -33,6 +35,157 @@ const FONT_SIZE_LIST = [
   { value: 72 },
   { value: 96 },
 ];
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ')
+}
+
+// font family component
+export function FontFamilyMenu({ fontList, fontFamily, handleFontFamilyChange }) {
+  const [query, setQuery] = useState('');
+  const [selectedFont, setSelectedFont] = useState(null);
+
+  useEffect(() => {
+    if (fontFamily) {
+      setSelectedFont(fontList.find(font => font.value === fontFamily));
+    }
+  }, [fontList, fontFamily]);
+  
+  const filteredFonts =
+    query === ''
+      ? fontList
+      : fontList.filter((font) => {
+          return font.name.toLowerCase().includes(query.toLowerCase())
+        });
+
+  const handleFontFamily = (font) => {
+    setSelectedFont(font);
+    handleFontFamilyChange(font.value);
+  }
+
+  return (
+    <Combobox as="div" value={selectedFont} onChange={handleFontFamily}>
+      <div className="relative mt-2">
+        <Combobox.Input
+          className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          onChange={(event) => setQuery(event.target.value)}
+          displayValue={(font) => font?.name}
+        />
+        <Combobox.Button className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+          <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+        </Combobox.Button>
+
+        {filteredFonts.length > 0 && (
+          <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            {filteredFonts.map((font, index) => (
+              <Combobox.Option
+                key={index}
+                value={font}
+                className={({ active }) =>
+                  classNames(
+                    'relative cursor-default select-none py-2 pl-3 pr-9',
+                    active ? 'bg-indigo-600 text-white' : 'text-gray-900'
+                  )
+                }
+              >
+                {({ active, selected }) => (
+                  <>
+                    <span className={classNames('block truncate', selected && 'font-semibold')}>{font.name}</span>
+
+                    {selected && (
+                      <span
+                        className={classNames(
+                          'absolute inset-y-0 right-0 flex items-center pr-4',
+                          active ? 'text-white' : 'text-indigo-600'
+                        )}
+                      >
+                        <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                    )}
+                  </>
+                )}
+              </Combobox.Option>
+            ))}
+          </Combobox.Options>
+        )}
+      </div>
+    </Combobox>
+  );
+}
+
+// size menu component
+export function SizeMenu({ fontSizeList, fontSize, handleTextSizeSelect }) {
+  const [selected, setSelected] = useState({ value: fontSize });
+
+  useEffect(() => {
+    setSelected({ value: fontSize });
+  }, [fontSize]);
+
+  const handleTextSize = (size) => {
+    setSelected(size);
+    handleTextSizeSelect(size.value);
+  }
+
+  return (
+    <Listbox value={selected} onChange={handleTextSize}>
+      {({ open }) => (
+        <div className='w-full'>
+          {/* <Listbox.Label className="block text-sm font-medium leading-6 text-gray-900">Assigned to</Listbox.Label> */}
+          <div className="relative mt-2">
+            <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+              <span className="block truncate">{selected.value}</span>
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </span>
+            </Listbox.Button>
+
+            <Transition
+              show={open}
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                {fontSizeList.map((size, index) => (
+                  <Listbox.Option
+                    key={index}
+                    className={({ active }) =>
+                      classNames(
+                        active ? 'bg-indigo-600 text-white' : 'text-gray-900',
+                        'relative cursor-default select-none py-2 pl-3 pr-9'
+                      )
+                    }
+                    value={size}
+                  >
+                    {({ selected, active }) => (
+                      <>
+                        <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
+                          {size.value}
+                        </span>
+
+                        {selected ? (
+                          <span
+                            className={classNames(
+                              active ? 'text-white' : 'text-indigo-600',
+                              'absolute inset-y-0 right-0 flex items-center pr-4'
+                            )}
+                          >
+                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        ) : null}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </Transition>
+          </div>
+        </div>
+      )}
+    </Listbox>
+  );
+}
 
 export const LoadText = ({
   id,
@@ -123,7 +276,7 @@ export const LoadText = ({
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, canvasElements, onChange, selectedElement}){
+export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFontSize, canvasElements, onChange, selectedElement}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState('');
@@ -132,7 +285,7 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
   const [textContent, setTextContent] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [color, setColor] = useState("#000000");
-  const [fontSize, setFontSize] = useState(12);
+  const [defaultFontSize, setDefaultFontSize] = useState(fontSize);
   const [fontFileName, setFontFileName] = useState("arial.ttf");
   const [error, setError] = useState(false);
 
@@ -140,7 +293,7 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
 
   const button = document.getElementById("add-text-button");
 
-  const isSelectedElement = selectedElement && selectedElement.type === "text" ? true : false;
+  const isSelectedElement = !!selectedElement && (selectedElement.type === "text" || selectedElement.type === "Checkbox");
 
   useEffect(() => {
     // Carga las fuentes personalizadas guardadas en el localStorage al iniciar la aplicación
@@ -149,6 +302,10 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
       setCustomFonts(JSON.parse(storedFonts));
     }
   }, []);
+
+  useEffect(() => {
+    setDefaultFontSize(fontSize);
+  }, [fontSize]);
 
   useEffect(() => {
     // Guarda las fuentes personalizadas en el localStorage al actualizar la lista
@@ -182,12 +339,12 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
     onChange(element, stateAttrs);
   }
 
-  const handleFontFamilyChange = (event) => {
-    const fontFile = allFonts.find(font => font.value === event.target.value)?.file;
+  const handleFontFamilyChange = (fontFamily) => {
+    const fontFile = allFonts.find(font => font.value === fontFamily)?.file;
     if (isSelectedElement) {
-      updateSelectedElement(selectedElement.id, ["fontFamily", "fontFile"], [event.target.value, fontFile]);
+      updateSelectedElement(selectedElement.id, ["fontFamily", "fontFile"], [fontFamily, fontFile]);
     } else {
-      setFontFamily(event.target.value);
+      setFontFamily(fontFamily);
     }
     setFontFileName(fontFile);
   };
@@ -238,11 +395,12 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
     }
   }
 
-  const handleTextSizeSelect = (event) => {
+  const handleTextSizeSelect = (fontSize) => {
     if (isSelectedElement) {
-      updateSelectedElement(selectedElement.id, "fontSize", Number(event.target.value));
+      updateSelectedElement(selectedElement.id, "fontSize", Number(fontSize));
     }else{
-      setFontSize(parseInt(event.target.value));
+      setDefaultFontSize(Number(fontSize));
+      setFontSize(Number(fontSize));
     }
   }
 
@@ -274,7 +432,7 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
       x: 10, 
       y: 10, 
       text: textContent, 
-      fontSize: fontSize, 
+      fontSize: defaultFontSize, 
       fontFamily: fontFamily, 
       fill: color 
     };
@@ -322,19 +480,11 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
       {view === 'fontList' ? (
         <div className="pb-4 mb-2">
           <div>
-            <label htmlFor="font-family-select" className="text-ft-blue-300" >Font: </label>
-            <select 
-              id="font-family-select" 
-              className="py-2 max-w-lg block w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md" 
-              value={isSelectedElement ? selectedElement.state.fontFamily : fontFamily} 
-              onChange={handleFontFamilyChange}
-            >
-              {allFonts.map((font, index) => (
-                <option key={index} value={font.value}>
-                  {font.name}
-                </option>
-              ))}
-            </select>
+            <FontFamilyMenu 
+              fontList={allFonts} 
+              fontFamily={isSelectedElement ? selectedElement.state.fontFamily : fontFamily}
+              handleFontFamilyChange={handleFontFamilyChange}
+            />
           </div>
             <div className="flex justify-left w-full mt-8">
               <button className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold py-2 px-4" onClick={() => handleView('uploadFont')}>Upload new font</button>
@@ -370,19 +520,13 @@ export default function TextEditor ({fontFamily, setFontFamily, canvasElements, 
       )}
       <div>
         <div className="mt-4">
-          <div className="flex mb-4">
+          <div className="mb-4 w-24">
             <p>Font size: </p>
-            <select 
-              className="ml-2 shadow-sm" 
-              onChange={handleTextSizeSelect}
-              value={isSelectedElement ? selectedElement.state.fontSize : fontSize}
-            >
-              {FONT_SIZE_LIST.map((fontSize, index) => (
-                <option key={index} value={fontSize.value}>
-                  {fontSize.value}
-                </option>
-              ))}
-            </select>
+            <SizeMenu 
+              fontSizeList={FONT_SIZE_LIST}
+              fontSize={isSelectedElement ? selectedElement.state.fontSize : defaultFontSize} 
+              handleTextSizeSelect={handleTextSizeSelect}
+            />
           </div>
           <div className='flex'>
             <button

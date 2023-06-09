@@ -23,6 +23,8 @@ export default function SidePanel({
   onChangeRotation,
   fontFamily,
   setFontFamily,
+  fontSize,
+  setFontSize,
   imageList,
   setImageList,
   canvasElements,
@@ -75,6 +77,7 @@ export default function SidePanel({
           handleCaptureClick={handleCaptureClick}
           format={format}
           canvasElements={canvasElements}
+          closeSidePanel={() => setSelectedOption(null)}
         />
       ),
       icon: DeviceMobileIcon,
@@ -85,6 +88,8 @@ export default function SidePanel({
         <TextEditor
           setFontFamily={setFontFamily}
           fontFamily={fontFamily}
+          setFontSize={setFontSize}
+          fontSize={fontSize}
           canvasElements={canvasElements}
           onChange={onChange}
           selectedElement={selectedElement}

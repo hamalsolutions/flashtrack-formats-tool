@@ -48,7 +48,7 @@ const postNewLabelDesign = async function ({ customerId, templateName, imageTemp
   }
 };
 
-export default function Templates({ setSelectedTemplate, handleCaptureClick, format, canvasElements }) {
+export default function Templates({ setSelectedTemplate, handleCaptureClick, format, canvasElements, closeSidePanel }) {
   const customerId = 1;
   const [templates, setTemplates] = useState([]);
   const [templateName, setTemplateName] = useState("");
@@ -69,6 +69,7 @@ export default function Templates({ setSelectedTemplate, handleCaptureClick, for
 
   const handleTemplateClick = (template) => {
     setSelectedTemplate(template);
+    closeSidePanel();
   };
 
   const handleSaveTemplate = async () => {
