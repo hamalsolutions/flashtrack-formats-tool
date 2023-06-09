@@ -44,18 +44,18 @@ export default function LayersEditor({
               <thead>
                 <tr>
                   <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                  Type
+                    #
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                  Content
+                    Type
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                  Coords
+                    Content
                   </th>
-                  <th Change="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Role
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Coords
                   </th>
-                  <th Change="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Change
                   </th>
                 </tr>
