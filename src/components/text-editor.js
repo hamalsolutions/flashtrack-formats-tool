@@ -31,7 +31,6 @@ function classNames(...classes) {
 export function FontFamilyMenu({ fontList, fontFamily, handleFontFamilyChange }) {
   const [query, setQuery] = useState('');
   const [selectedFont, setSelectedFont] = useState(null);
-  console.log("nuevo",fontFamily);
   useEffect(() => {
     if (fontFamily) {
       setSelectedFont(fontList.find(font => font.name === fontFamily));
@@ -44,7 +43,6 @@ export function FontFamilyMenu({ fontList, fontFamily, handleFontFamilyChange })
       : fontList.filter((font) => {
           return font.name.toLowerCase().includes(query.toLowerCase())
         });
-  console.log(filteredFonts);
   const handleFontFamily = (font) => {
     setSelectedFont(font);
     handleFontFamilyChange(font.name);
