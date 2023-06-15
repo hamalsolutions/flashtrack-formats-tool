@@ -23,6 +23,7 @@ export default function SidePanel({
   onChangeRotation,
   fontFamily,
   setFontFamily,
+  fontFamilyList,
   fontSize,
   setFontSize,
   imageList,
@@ -89,6 +90,7 @@ export default function SidePanel({
           setFontFamily={setFontFamily}
           fontFamily={fontFamily}
           setFontSize={setFontSize}
+          fontFamilyList={fontFamilyList}
           fontSize={fontSize}
           canvasElements={canvasElements}
           onChange={onChange}

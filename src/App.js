@@ -3,7 +3,7 @@ import { Stage, Layer, Rect } from 'react-konva';
 import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
-import { LoadText, FONT_FAMILY_LIST } from './components/text-editor';
+import { LoadText } from './components/text-editor';
 import { LoadField } from './components/fields-editor';
 import { inchesToPixels, centimetersToPixels } from './components/sizelabel-editor';
 import jsPDF from 'jspdf';
@@ -48,7 +48,7 @@ export default function App() {
 
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-
+  const [fontFamilyList, setFontFamilyList] = useState([]);
   // maximum amount of elements to store in the undo stack
   const maxHistoryStackLength = 10;
 
@@ -181,7 +181,26 @@ export default function App() {
     }
   }
 
-  const [fontFamily, setFontFamily] = useState(FONT_FAMILY_LIST[0].value);
+  useEffect(() => {
+    const fetchFontFamily = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/fonts`);
+        const fontFamilyData = await response.json();
+        if (response.ok) {
+          setFontFamilyList(fontFamilyData);
+        } else {
+          const message = `Notifications: ${fontFamilyData.message}`;
+          throw new Error(message);
+        }
+      } catch (error) {
+        console.error('Error fontFamily data:', error);
+      }
+    };
+
+    fetchFontFamily();
+  }, []);
+
+  const [fontFamily, setFontFamily] = useState(fontFamilyList[0]?.name);
   const [fontSize, setFontSize] = useState(48);
 
   // we must load images from database to this state or local storage
@@ -458,6 +477,7 @@ export default function App() {
             onChangeRotation={handleChangeRotation}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
+            fontFamilyList={fontFamilyList}
             fontSize={fontSize}
             setFontSize={setFontSize}
             imageList={imageList}
@@ -494,6 +514,7 @@ export default function App() {
             handleRedo={handleRedo}
             canvasElements={canvasElements}
             onChange={onChange}
+            fontFamilyList={fontFamilyList}
           />
           {/* A partir de aqui Canvas*/}
           <div

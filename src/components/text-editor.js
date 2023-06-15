@@ -6,19 +6,6 @@ import { ColorSwatchIcon, XIcon } from "@heroicons/react/outline";
 import { Listbox, Transition, Combobox } from '@headlessui/react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/solid';
 
-export const FONT_FAMILY_LIST = [
-  { name: 'Arial', value: 'Arial', file: "arial.ttf" },
-  { name: 'Arial Bold', value: 'Arial Black', file: "arialbd.ttf" },
-  { name: 'Helvetica', value: 'Helvetica', file: "Helvetica_Neue.ttf" },
-  { name: 'Times New Roman', value: 'Times New Roman', file: "times.ttf" },
-  { name: 'Times New Roman Bold', value: 'Times New Roman Black', file: "timesbd.ttf" },
-  { name: 'Roboto', value: 'Roboto', file: "" },
-  { name: 'Verdana', value: 'Verdana', file: "" },
-  { name: 'Lato', value: 'Lato', file: "" },
-  { name: 'Calibri', value: 'Calibri', file: "" },
-  { name: 'Cambria', value: 'Cambria', file: "" },
-];
-
 export const FONT_SIZE_LIST = [
   { value: 8 },
   { value: 9 },
@@ -44,10 +31,10 @@ function classNames(...classes) {
 export function FontFamilyMenu({ fontList, fontFamily, handleFontFamilyChange }) {
   const [query, setQuery] = useState('');
   const [selectedFont, setSelectedFont] = useState(null);
-
+  console.log("nuevo",fontFamily);
   useEffect(() => {
     if (fontFamily) {
-      setSelectedFont(fontList.find(font => font.value === fontFamily));
+      setSelectedFont(fontList.find(font => font.name === fontFamily));
     }
   }, [fontList, fontFamily]);
   
@@ -57,10 +44,10 @@ export function FontFamilyMenu({ fontList, fontFamily, handleFontFamilyChange })
       : fontList.filter((font) => {
           return font.name.toLowerCase().includes(query.toLowerCase())
         });
-
+  console.log(filteredFonts);
   const handleFontFamily = (font) => {
     setSelectedFont(font);
-    handleFontFamilyChange(font.value);
+    handleFontFamilyChange(font.name);
   }
 
   return (
@@ -276,12 +263,11 @@ export const LoadText = ({
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFontSize, canvasElements, onChange, selectedElement}){
+export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState('');
   const [newFontFile, setNewFontFile] = useState(null);
-  const [customFonts, setCustomFonts] = useState([]); // Lista de fuentes personalizadas
   const [textContent, setTextContent] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [color, setColor] = useState("#000000");
@@ -289,43 +275,58 @@ export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFon
   const [fontFileName, setFontFileName] = useState("arial.ttf");
   const [error, setError] = useState(false);
 
-  const allFonts = [...FONT_FAMILY_LIST, ...customFonts];
-
   const button = document.getElementById("add-text-button");
 
   const isSelectedElement = !!selectedElement && (selectedElement.type === "text" || selectedElement.type === "Checkbox");
+  
+  const postFontFamily = async ({ newFontName, newFontFile, fontFileName }) => {
 
-  useEffect(() => {
-    // Carga las fuentes personalizadas guardadas en el localStorage al iniciar la aplicación
-    const storedFonts = localStorage.getItem('customFonts');
-    if (storedFonts) {
-      setCustomFonts(JSON.parse(storedFonts));
+    const formData = new FormData();
+    formData.append('name', newFontName);
+    formData.append('path', fontFileName);
+    formData.append('file', newFontFile);
+
+    const requestOptions = {
+      method: "POST",
+      body: formData,
+    };
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/fonts`,
+        requestOptions
+      );
+      const postFontFamily = await response.json();
+      if (!response.ok) {
+        const message = `An error has ocurred: ${postFontFamily.message}`;
+        throw new Error(message);
+      }
+      return postFontFamily;
+    } catch (error) {
+      console.log(error.message);
+      return { error: error.message };
     }
-  }, []);
+  }
 
   useEffect(() => {
     setDefaultFontSize(fontSize);
   }, [fontSize]);
 
-  useEffect(() => {
-    // Guarda las fuentes personalizadas en el localStorage al actualizar la lista
-    localStorage.setItem('customFonts', JSON.stringify(customFonts));
-  }, [customFonts]);
 
   useEffect(() => {
     // Agrega una etiqueta de estilo al encabezado de la página para cargar las fuentes personalizadas
     const customFontsStylesheet = document.createElement('style');
-    const fontFaceRules = customFonts.map(font => {
+    const fontFaceRules = fontFamilyList.map(font => {
       return `
         @font-face {
           font-family: "${font.name}";
-          src: url(${font.file});
+          src: url(${font.path});
         }
       `;
     });
     customFontsStylesheet.textContent = fontFaceRules.join('\n');
     document.head.appendChild(customFontsStylesheet);
-  }, [customFonts]);
+  }, [fontFamilyList]);
 
   //Permite modificar el elemento seleccionado
   const updateSelectedElement = (id, property, value) => {
@@ -340,7 +341,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFon
   }
 
   const handleFontFamilyChange = (fontFamily) => {
-    const fontFile = allFonts.find(font => font.value === fontFamily)?.file;
+    const fontFile = fontFamilyList.find((font) => font.name === fontFamily)?.path;
     if (isSelectedElement) {
       updateSelectedElement(selectedElement.id, ["fontFamily", "fontFile"], [fontFamily, fontFile]);
     } else {
@@ -348,7 +349,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFon
     }
     setFontFileName(fontFile);
   };
-
+  
   const handleNewFontNameChange = (event) => {
     setNewFontName(event.target.value);
   };
@@ -404,39 +405,34 @@ export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFon
     }
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    
     if (!newFontName.trim()) {
       setError(true);
       return;
     }
-      
-    // Agrega la nueva fuente a la lista de fuentes personalizadas
-    const newFont = {
-      name: newFontName,
-      file: URL.createObjectURL(newFontFile),
-      value: newFontName,
-    };
-    setCustomFonts([...customFonts, newFont]);
-    // Reinicia los campos del formulario
-    setNewFontName('');
-    setNewFontFile(null);
-    // Cambia la vista de nuevo a la lista de fuentes
-    setView('fontList');
-    setError(false);
+    try {
+      const postResponse = await postFontFamily({ newFontName, newFontFile, fontFileName });
+      if (!postResponse.error) {
+        setNewFontName("");
+        setNewFontFile(null);
+        setView("fontList");
+        setError(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const addTextToCanvas = () => {
-    const attrs = { 
-      x: 10, 
-      y: 10, 
-      text: textContent, 
-      fontSize: defaultFontSize, 
-      fontFamily: fontFamily, 
-      fill: color 
+    const attrs = {
+      x: 10,
+      y: 10,
+      text: textContent,
+      fontSize: defaultFontSize,
+      fontFamily: fontFamily,
+      fill: color,
     };
-    // create text to calculate width and height
     const newText = new konvaText(attrs);
     const width = newText.width();
     const height = newText.height();
@@ -451,9 +447,10 @@ export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFon
         height,
         rotation: 0,
         fontFile: fontFileName,
-      }
+      },
     });
-  }
+  };
+  
 
   return (
     <div>
@@ -481,7 +478,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontSize, setFon
         <div className="pb-4 mb-2">
           <div>
             <FontFamilyMenu 
-              fontList={allFonts} 
+              fontList={fontFamilyList} 
               fontFamily={isSelectedElement ? selectedElement.state.fontFamily : fontFamily}
               handleFontFamilyChange={handleFontFamilyChange}
             />
