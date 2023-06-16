@@ -181,25 +181,25 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-    const fetchFontFamily = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/fonts`);
-        const fontFamilyData = await response.json();
-        if (response.ok) {
-          setFontFamilyList(fontFamilyData);
-        } else {
-          const message = `Notifications: ${fontFamilyData.message}`;
-          throw new Error(message);
-        }
-      } catch (error) {
-        console.error('Error fontFamily data:', error);
+  const fetchFontFamily = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/fonts`);
+      const fontFamilyData = await response.json();
+      if (response.ok) {
+        setFontFamilyList(fontFamilyData);
+      } else {
+        const message = `Notifications: ${fontFamilyData.message}`;
+        throw new Error(message);
       }
-    };
-
+    } catch (error) {
+      console.error('Error fontFamily data:', error);
+    }
+  };
+  
+  useEffect(() => {
     fetchFontFamily();
   }, []);
-
+  
   const [fontFamily, setFontFamily] = useState(fontFamilyList[0]?.name);
   const [fontSize, setFontSize] = useState(48);
 
@@ -492,6 +492,7 @@ export default function App() {
             handleCaptureClick={handleCaptureClick}
             selectedMetric={selectedMetric}
             setSelectedMetric={setSelectedMetric}
+            fetchFontFamily={fetchFontFamily}
             format={{ 
               widthPx: selectedW, 
               heightPx: selectedH, 

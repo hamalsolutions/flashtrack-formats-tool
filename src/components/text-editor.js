@@ -261,7 +261,7 @@ export const LoadText = ({
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement}){
+export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement, fetchFontFamily}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState('');
@@ -416,6 +416,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
         setNewFontFile(null);
         setView("fontList");
         setError(false);
+        fetchFontFamily();
       }
     } catch (error) {
       console.log(error);
