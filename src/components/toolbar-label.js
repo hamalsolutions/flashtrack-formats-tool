@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Disclosure } from '@headlessui/react';
-import { FONT_SIZE_LIST, FONT_FAMILY_LIST, SizeMenu, FontFamilyMenu } from './text-editor';
+import { FONT_SIZE_LIST, SizeMenu, FontFamilyMenu } from './text-editor';
 import { SketchPicker } from "react-color";
 import {
   TrashIcon,
@@ -34,6 +34,7 @@ export default function ToolbarLabel({
   handleRedo,
   onChange,
   canvasElements,
+  fontFamilyList,
 }) {
   const [formatName, setFormatName] = useState('newlabel');
   const [fade, setFade] = useState(false);
@@ -46,7 +47,7 @@ export default function ToolbarLabel({
 
   const isSelectedTextElement = !!selectedElement && (selectedElement?.type === 'text' || selectedElement?.type === 'Checkbox');
 
-  const allFonts = [...FONT_FAMILY_LIST, ...customFonts];
+  const allFonts = [...fontFamilyList, ...customFonts];
 
   useEffect(() => {
     if (isSelectedTextElement) {
