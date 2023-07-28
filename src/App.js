@@ -516,6 +516,8 @@ export default function App() {
             canvasElements={canvasElements}
             onChange={onChange}
             fontFamilyList={fontFamilyList}
+            width={width}
+            selectedMetric={selectedMetric}
           />
           {/* A partir de aqui Canvas*/}
           <div
