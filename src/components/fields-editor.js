@@ -34,6 +34,12 @@ export const LoadField = ({
       }
     }, [text]);
 
+    useEffect( () => {
+      if(fontSize){
+        setCurrentElementWidth(textRef.current.width());
+      }
+    }, [fontSize]);
+
     return (
       <Fragment>
           <Text
