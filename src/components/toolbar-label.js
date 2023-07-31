@@ -37,7 +37,8 @@ export default function ToolbarLabel({
   canvasElements,
   fontFamilyList,
   width,
-  selectedMetric
+  selectedMetric,
+  currentElementWidth
 }) {
   
   const [formatName, setFormatName] = useState('newlabel');
@@ -109,8 +110,8 @@ export default function ToolbarLabel({
         );
         onChange(element, stateAttrs);
         setDefaultText(event.target.value);
+      }
     }
-  }
   
   const handleColorSelect = (newColor) => {
     if (isSelectedTextElement) {
@@ -128,7 +129,7 @@ export default function ToolbarLabel({
   const handleSelectAlign = (e) => {
     if (selectedElement) {
       const canvasWidth = Math.floor((selectedMetric === 'in') ? width  * inchesToPixels : width  * centimetersToPixels);  
-      const elementWidth = selectedElement.state.width;
+      const elementWidth = currentElementWidth;
       const selectAlign = e.target.value;
       let x = 0;
       switch (selectAlign) {
@@ -139,7 +140,7 @@ export default function ToolbarLabel({
           x = canvasWidth * 0.01;
           break;
         case "right":
-          x = (canvasWidth - elementWidth) - canvasWidth * 0.01;
+          x = (canvasWidth - elementWidth) - (canvasWidth * 0.01);
           break;
         default:
           break;
@@ -265,7 +266,7 @@ export default function ToolbarLabel({
                           isSelectedElemet 
                             ? 
                               <>
-                                <option value="none" disabled>Select Alignment...</option>
+                                <option value="none" disabled hidden>Select Alignment...</option>
                                 <option value="center">Center</option>
                                 <option value="left">Left</option>
                                 <option value="right">Right</option>
