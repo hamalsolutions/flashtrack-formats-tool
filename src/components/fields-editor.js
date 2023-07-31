@@ -15,7 +15,8 @@ export const LoadField = ({
     onChange,
     fontFamily,
     fontSize,
-    fill
+    fill,
+    setCurrentElementWidth
   }) => {
     const textRef = useRef();
     const trRef = useRef();
@@ -27,6 +28,18 @@ export const LoadField = ({
         }
     }, [isSelected]);
   
+    useEffect( () => {
+      if(text){
+        setCurrentElementWidth(textRef.current.width());
+      }
+    }, [text]);
+
+    useEffect( () => {
+      if(fontSize){
+        setCurrentElementWidth(textRef.current.width());
+      }
+    }, [fontSize]);
+
     return (
       <Fragment>
           <Text

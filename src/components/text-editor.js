@@ -186,7 +186,8 @@ export const LoadText = ({
   fontFamily,
   fontSize,
   fill,
-  selectedElement
+  selectedElement,
+  setCurrentElementWidth
 }) => {
   const textRef = useRef();
   const trRef = useRef();
@@ -197,6 +198,18 @@ export const LoadText = ({
           trRef.current.getLayer().batchDraw();
       }
   }, [isSelected]);
+
+  useEffect( () => {
+    if(text){
+      setCurrentElementWidth(textRef.current.width());
+    }
+  }, [text]);
+
+  useEffect( () => {
+    if(fontSize){
+      setCurrentElementWidth(textRef.current.width());
+    }
+  }, [fontSize]);
 
   return (
     <Fragment>
@@ -221,25 +234,29 @@ export const LoadText = ({
             }}
             onClick={onSelect}
             onTap={onSelect}
-            onTransformEnd={(e) => {
+            onTransformEnd={() => {
               const node = textRef.current;
               const scaleX = node.scaleX();
               const scaleY = node.scaleY();
+              const width = Math.max(5, node.width() * scaleX);
+              const height = Math.max(node.height() * scaleY);
               node.scaleX(1);
               node.scaleY(1);
               onChange({
                 x: node.x(),
                 y: node.y(),
                 rotation: node.rotation(),
-                width: Math.max(5, node.width() * scaleX),
-                height: Math.max(node.height() * scaleY),
+                width: width,
+                height: height,
               });
             }}
             onTransform={() => {
               const node = textRef.current;
+              const width = Math.max(node.width() * node.scaleX(), 20);
+              const height = Math.max(node.height() * node.scaleY(), 20);
               node.setAttrs({
-                width: Math.max(node.width() * node.scaleX(), 20),
-                height: Math.max(node.height() * node.scaleY(), 20),
+                width: width,
+                height: height,
                 scaleX: 1,
                 scaleY: 1,
               });
@@ -465,7 +482,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
           onKeyDown={handleEnterToAddText}
         />
         <button 
-          className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold px-4" 
+          className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold px-4 mx-2" 
           onClick={handleNewText}
           id="add-text-button"
           name="add-text-button"

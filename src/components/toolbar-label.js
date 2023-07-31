@@ -7,6 +7,7 @@ import {
   ArrowNarrowLeftIcon,
   ArrowNarrowRightIcon,
 } from '@heroicons/react/outline';
+import { inchesToPixels, centimetersToPixels } from './sizelabel-editor';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -35,7 +36,11 @@ export default function ToolbarLabel({
   onChange,
   canvasElements,
   fontFamilyList,
+  width,
+  selectedMetric,
+  currentElementWidth
 }) {
+  
   const [formatName, setFormatName] = useState('newlabel');
   const [fade, setFade] = useState(false);
   const [defaultFontSize, setDefaultFontSize] = useState(0);
@@ -44,10 +49,13 @@ export default function ToolbarLabel({
   const [defaultColor, setDefaultColor] = useState('#000000');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [customFonts, setCustomFonts] = useState([]);
-
+  const [align, setAlign] = useState("none");
+  
   const isSelectedTextElement = !!selectedElement && (selectedElement?.type === 'text' || selectedElement?.type === 'Checkbox');
-
+  
   const allFonts = [...fontFamilyList, ...customFonts];
+  
+  const isSelectedElemet = selectedElement !== null;
 
   useEffect(() => {
     if (isSelectedTextElement) {
@@ -55,7 +63,7 @@ export default function ToolbarLabel({
       setDefaultFontSize(selectedElement?.state.fontSize);
       setDefaultText(selectedElement?.state.text);
       setDefaultColor(selectedElement?.state.fill);
-
+      
       const storedFonts = localStorage.getItem('customFonts');
       if (storedFonts) {
         setCustomFonts(JSON.parse(storedFonts));
@@ -64,7 +72,7 @@ export default function ToolbarLabel({
       setFade(false);
     }
   }, [isSelectedTextElement]);
-
+  
   const handleTextSizeSelect = (fontSize) => {
     if (isSelectedTextElement) {
       const { element, stateAttrs } = getUpdatedElementAttrs(
@@ -86,25 +94,25 @@ export default function ToolbarLabel({
         selectedElement.id,
         ["fontFamily", "fontFile"],
         [fontFamily, fontFile]
-      );
-      onChange(element, stateAttrs);
-      setDefaultFontFamily(fontFamily);
+        );
+        onChange(element, stateAttrs);
+        setDefaultFontFamily(fontFamily);
+      }
     }
-  }
-
-  const handleTextSelect = (event) => {
-    if (isSelectedTextElement) {
-      const { element, stateAttrs } = getUpdatedElementAttrs(
-        canvasElements,
+    
+    const handleTextSelect = (event) => {
+      if (isSelectedTextElement) {
+        const { element, stateAttrs } = getUpdatedElementAttrs(
+          canvasElements,
         selectedElement.id,
         'text',
         event.target.value
-      );
-      onChange(element, stateAttrs);
-      setDefaultText(event.target.value);
+        );
+        onChange(element, stateAttrs);
+        setDefaultText(event.target.value);
+      }
     }
-  }
-
+  
   const handleColorSelect = (newColor) => {
     if (isSelectedTextElement) {
       const { element, stateAttrs } = getUpdatedElementAttrs(
@@ -112,12 +120,42 @@ export default function ToolbarLabel({
         selectedElement.id,
         'fill',
         newColor.hex
+        );
+        onChange(element, stateAttrs);
+        setDefaultColor(newColor.hex);
+      }
+  }
+  
+  const handleSelectAlign = (e) => {
+    if (selectedElement) {
+      const canvasWidth = Math.floor((selectedMetric === 'in') ? width  * inchesToPixels : width  * centimetersToPixels);  
+      const elementWidth = currentElementWidth;
+      const selectAlign = e.target.value;
+      let x = 0;
+      switch (selectAlign) {
+        case "center":
+          x = (canvasWidth / 2) - (elementWidth / 2);
+          break;
+        case "left":
+          x = canvasWidth * 0.01;
+          break;
+        case "right":
+          x = (canvasWidth - elementWidth) - (canvasWidth * 0.01);
+          break;
+        default:
+          break;
+      }
+      setAlign(selectAlign);
+      const { element, stateAttrs } = getUpdatedElementAttrs(
+        canvasElements,
+        selectedElement.id,
+        'x',
+        x
       );
       onChange(element, stateAttrs);
-      setDefaultColor(newColor.hex);
     }
   }
-
+  
   return (
     <div>
       <Disclosure as="nav" className="bg-white">
@@ -215,9 +253,33 @@ export default function ToolbarLabel({
                     </div>
                   </div>
                 )}
+                <div className="flex items-center pl-4">
+                  <span className="mr-2">Align:</span>
+                  <div className="relative pl-2">
+                      <select 
+                        className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                        onChange={(e) => handleSelectAlign(e)}
+                        disabled={!isSelectedElemet}
+                        value={"none"}
+                      >
+                        {
+                          isSelectedElemet 
+                            ? 
+                              <>
+                                <option value="none" disabled hidden>Select Alignment...</option>
+                                <option value="center">Center</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                              </> 
+                            : 
+                              <>
+                                <option value="none">Select a Element...</option>
+                              </>
+                        }
+                      </select>
+                  </div>
+                </div>
               </div>
-
-
               <div className="flex items-center">
                 {isSelectedTextElement && !!selectedElement.field && 
                   <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">

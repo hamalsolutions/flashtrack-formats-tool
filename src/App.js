@@ -34,6 +34,7 @@ export default function App() {
   const [selectedElement, setSelectedElement] = useState(null);
   const [selectedColor, setSelectedColor] = useState(defaultCanvasColor);
   const [width, setWidth] = useState(defaultCanvasWidth);
+  const [currentElementWidth, setCurrentElementWidth] = useState(0);
   const [height, setHeight] = useState(defaultCanvasHeight);
   const [selectedMetric, setSelectedMetric] = useState(defaultCanvasMetric);
   const [selectedRotation, setSelectedRotation] = useState(defaultCanvasRotation);
@@ -373,6 +374,7 @@ export default function App() {
           onSelect={() => onSelect(element)}
           isSelected={selectedElement && selectedElement.id === element.id}
           onChange={(newAttrs) => onChange(element, newAttrs)}
+          setCurrentElementWidth={setCurrentElementWidth}
         />
       );
     }
@@ -390,6 +392,7 @@ export default function App() {
           onSelect={() => onSelect(element)}
           isSelected={selectedElement && selectedElement.id === element.id}
           onChange={(newAttrs) => onChange(element, newAttrs)}
+          setCurrentElementWidth={setCurrentElementWidth}
         />
       );
     }
@@ -516,6 +519,9 @@ export default function App() {
             canvasElements={canvasElements}
             onChange={onChange}
             fontFamilyList={fontFamilyList}
+            width={width}
+            selectedMetric={selectedMetric}
+            currentElementWidth={currentElementWidth}
           />
           {/* A partir de aqui Canvas*/}
           <div
