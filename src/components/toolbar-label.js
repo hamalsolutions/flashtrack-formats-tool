@@ -155,7 +155,22 @@ export default function ToolbarLabel({
       onChange(element, stateAttrs);
     }
   }
-  
+
+  const handleXChange = (e) => {
+    const newX = parseFloat(e.target.value);
+    if (!isNaN(newX) && selectedElement) {
+      onChange(selectedElement, { x: newX });
+    }
+  };
+
+  const handleYChange = (e) => {
+    const newY = parseFloat(e.target.value);
+    if (!isNaN(newY) && selectedElement) {
+      onChange(selectedElement, { y: newY });
+    }
+  };
+
+
   return (
     <div>
       <Disclosure as="nav" className="bg-white">
@@ -279,6 +294,32 @@ export default function ToolbarLabel({
                       </select>
                   </div>
                 </div>
+                <div className="flex items-center pl-4">
+                {selectedElement && (
+                  <>
+                    <span className="mr-2">X:</span>
+                    <div className="relative pl-2">
+                      <input
+                        type="number"
+                        step="1"
+                        value={Math.floor(selectedElement.state.x)}
+                        onChange={handleXChange}
+                        className="block appearance-none w-3/4  bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <span className="mr-2">Y:</span>
+                    <div className="relative pl-2">
+                      <input
+                        type="number"
+                        step="1"
+                        value={Math.floor(selectedElement.state.y)}
+                        onChange={handleYChange}
+                        className="block appearance-none w-3/4 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </>
+                  )}
+                  </div>
               </div>
               <div className="flex items-center">
                 {isSelectedTextElement && !!selectedElement.field && 
