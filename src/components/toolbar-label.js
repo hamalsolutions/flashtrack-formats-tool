@@ -294,32 +294,6 @@ export default function ToolbarLabel({
                       </select>
                   </div>
                 </div>
-                <div className="flex items-center pl-4">
-                {selectedElement && (
-                  <>
-                    <span className="mr-2">X:</span>
-                    <div className="relative pl-2">
-                      <input
-                        type="number"
-                        step="1"
-                        value={Math.floor(selectedElement.state.x)}
-                        onChange={handleXChange}
-                        className="block appearance-none w-3/4  bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                    <span className="mr-2">Y:</span>
-                    <div className="relative pl-2">
-                      <input
-                        type="number"
-                        step="1"
-                        value={Math.floor(selectedElement.state.y)}
-                        onChange={handleYChange}
-                        className="block appearance-none w-3/4 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  </>
-                  )}
-                  </div>
               </div>
               <div className="flex items-center">
                 {isSelectedTextElement && !!selectedElement.field && 
@@ -390,6 +364,40 @@ export default function ToolbarLabel({
           </div>
         </>
       </Disclosure>
+      {selectedElement ? (
+      <div className="overflow-hidden bg-white">
+        <div
+          className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${selectedElement ? "flex-wrap" : ""}`}
+        >
+         <div className="flex w-auto pb-2 items-center justify-center pl-4">
+                  {selectedElement && (
+                    <>
+                      <span className="mr-2">X:</span>
+                      <div className="relative pl-2">
+                        <input
+                          type="number"
+                          step="1"
+                          value={Math.floor(selectedElement.state.x)}
+                          onChange={handleXChange}
+                          className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <span className="mr-2">Y:</span>
+                      <div className="relative pl-2">
+                        <input
+                          type="number"
+                          step="1"
+                          value={Math.floor(selectedElement.state.y)}
+                          onChange={handleYChange}
+                          className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </>
+                    )}
+              </div>
+        </div>
+      </div>
+    ) : null}
     </div>
   );
 }
