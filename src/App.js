@@ -1,5 +1,5 @@
 import { React, Fragment, useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Rect } from 'react-konva';
+import { Stage, Layer, Rect, Line } from 'react-konva';
 import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
@@ -469,6 +469,55 @@ export default function App() {
     setRedoStack([]);
   };
 
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  useEffect(() => {
+    const containerElement = document.getElementById("grayArea");
+    if (containerElement) {
+      setContainerWidth(containerElement.clientWidth);
+      setContainerHeight(containerElement.clientHeight);
+    }
+  }, []);
+
+  const rulerLines = [];
+  const cmInterval = 20;
+
+  // Rulers
+  for (let i = 0; i <= containerWidth; i += cmInterval) {
+    rulerLines.push(
+      <Line
+        key={`horizontal-${i}`}
+        points={[0, i, 10, i]}
+        stroke="black"
+      />
+    );
+    rulerLines.push(
+      <Line
+        key={`vertical-${i}`}
+        points={[i, 0, i, 10]}
+        stroke="black"
+      />
+    );
+
+    for (let j = 1; j < cmInterval; j++) {
+      rulerLines.push(
+        <Line
+          key={`horizontal-small-${i}-${j}`}
+          points={[0, i + (j * cmInterval) / 2, 5, i + (j * cmInterval) / 2]}
+          stroke="black"
+        />
+      );
+      rulerLines.push(
+        <Line
+          key={`vertical-small-${i}-${j}`}
+          points={[i + (j * cmInterval) / 2, 0, i + (j * cmInterval) / 2, 5]}
+          stroke="black"
+        />
+      );
+    }
+  }
+
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
@@ -524,6 +573,19 @@ export default function App() {
             currentElementWidth={currentElementWidth}
           />
           {/* A partir de aqui Canvas*/}
+          <div 
+            style={{ 
+              width: "100%",
+              height: "100%",
+              position: "absolute"
+            }}>
+              <Stage 
+                width={containerWidth}
+                height={containerHeight}
+              >
+                <Layer>{rulerLines}</Layer>
+              </Stage>
+          </div>
           <div
             style={{
               width: '100%',
@@ -545,6 +607,7 @@ export default function App() {
                 width: `${selectedW}px`,
                 height: `${selectedH}px`,
                 margin: '5px',
+                display: 'flex'
               }}
             >
               <Stage
@@ -553,7 +616,7 @@ export default function App() {
                 onMouseDown={handleDeselectElement}
                 onTouchStart={handleDeselectElement}
                 ref={stageRef}
-              >
+                >
                 <Layer>
                   <Rect
                     width={selectedW}
