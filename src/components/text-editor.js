@@ -187,7 +187,9 @@ export const LoadText = ({
   fontSize,
   fill,
   selectedElement,
-  setCurrentElementWidth
+  setCurrentElementWidth,
+  onDragMove,
+  onDragEnd,
 }) => {
   const textRef = useRef();
   const trRef = useRef();
@@ -231,6 +233,9 @@ export const LoadText = ({
                   x: node.x(),
                   y: node.y(),
               });
+              if (onDragEnd) {
+                        onDragEnd(e);
+                    }
             }}
             onClick={onSelect}
             onTap={onSelect}
@@ -261,6 +266,7 @@ export const LoadText = ({
                 scaleY: 1,
               });
             }}
+            onDragMove={onDragMove}
         />
         {isSelected && (
           <Transformer
