@@ -29,7 +29,9 @@ export const LoadImage = ({
         if (isSelected) {
             trRef.current.nodes([imageRef.current]);
             trRef.current.getLayer().batchDraw();
-            setCurrentElementWidth(imageRef.current.width());
+            if(!isBarcode){
+                setCurrentElementWidth(imageRef.current.width());
+            }
         }
     }, [isSelected]);
     
@@ -63,7 +65,9 @@ export const LoadImage = ({
                     const scaleY = node.scaleY();
                     let width = Math.max(5, node.width() * scaleX);
                     let height = Math.max(node.height() * scaleY);
-                    setCurrentElementWidth(width);
+                    if(!isBarcode){
+                        setCurrentElementWidth(width);
+                    }
                     if (isBarcode) {
                         width = node.width();
                         height = node.height();
