@@ -29,9 +29,7 @@ export const LoadImage = ({
         if (isSelected) {
             trRef.current.nodes([imageRef.current]);
             trRef.current.getLayer().batchDraw();
-            if(!isBarcode){
-                setCurrentElementWidth(imageRef.current.width());
-            }
+            setCurrentElementWidth(imageRef.current.width());
         }
     }, [isSelected]);
     
