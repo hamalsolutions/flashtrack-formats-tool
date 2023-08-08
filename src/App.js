@@ -505,6 +505,7 @@ export default function App() {
           width={element.state.width}
           height={element.state.height}
           isBarcode={type === 'barcode'}
+          setCurrentElementWidth={setCurrentElementWidth}
           {...commonProps}
         />
       );
