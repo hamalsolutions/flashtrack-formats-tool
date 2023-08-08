@@ -15,7 +15,9 @@ export const LoadImage = ({
     isSelected,
     onSelect,
     onChange,
-    isBarcode
+    isBarcode,
+    onDragMove,
+    onDragEnd,
 }) => {
     const imageRef = useRef();
     const trRef = useRef();
@@ -44,6 +46,10 @@ export const LoadImage = ({
                         x: node.x(),
                         y: node.y(),
                     });
+                    // Llama a la función onDragEnd si está definida
+                    if (onDragEnd) {
+                        onDragEnd(e);
+                    }
                 }}
                 id={id}
                 onClick={onSelect}
@@ -71,6 +77,8 @@ export const LoadImage = ({
                         height,
                     });
                 }}
+                // Llama a la función onDragMove si está definida
+                onDragMove={onDragMove}
             />
             {isSelected && (
                 <Transformer
@@ -86,6 +94,7 @@ export const LoadImage = ({
         </Fragment>
     );
 };
+
 
 export default function ImageEditor({ imageList, setImageList, onChange }) {
     const [view, setView] = useState("images");

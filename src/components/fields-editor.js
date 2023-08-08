@@ -16,7 +16,9 @@ export const LoadField = ({
     fontFamily,
     fontSize,
     fill,
-    setCurrentElementWidth
+    setCurrentElementWidth,
+    onDragMove,
+    onDragEnd, 
   }) => {
     const textRef = useRef();
     const trRef = useRef();
@@ -60,6 +62,9 @@ export const LoadField = ({
                     x: node.x(),
                     y: node.y(),
                 });
+                if (onDragEnd) {
+                        onDragEnd(e);
+                    }
               }}
               onClick={onSelect}
               onTap={onSelect}
@@ -86,6 +91,7 @@ export const LoadField = ({
                   scaleY: 1,
                 });
               }}
+              onDragMove={onDragMove}
           />
           {isSelected && (
             <Transformer
