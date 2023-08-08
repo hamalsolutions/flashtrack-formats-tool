@@ -18,6 +18,7 @@ export const LoadImage = ({
     isBarcode,
     onDragMove,
     onDragEnd,
+    setCurrentElementWidth,
 }) => {
     const imageRef = useRef();
     const trRef = useRef();
@@ -28,9 +29,10 @@ export const LoadImage = ({
         if (isSelected) {
             trRef.current.nodes([imageRef.current]);
             trRef.current.getLayer().batchDraw();
+            setCurrentElementWidth(imageRef.current.width());
         }
     }, [isSelected]);
-
+    
     return (
         <Fragment>
             <Image
@@ -61,7 +63,7 @@ export const LoadImage = ({
                     const scaleY = node.scaleY();
                     let width = Math.max(5, node.width() * scaleX);
                     let height = Math.max(node.height() * scaleY);
-
+                    setCurrentElementWidth(width);
                     if (isBarcode) {
                         width = node.width();
                         height = node.height();
