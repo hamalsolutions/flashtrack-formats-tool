@@ -297,7 +297,7 @@ export default function App() {
   }, []);
   
   const [fontFamily, setFontFamily] = useState(fontFamilyList[0]?.name);
-  const [fontSize, setFontSize] = useState(48);
+  const [fontSize, setFontSize] = useState(24);
 
   // we must load images from database to this state or local storage
   const [imageList, setImageList] = useState([]);
@@ -475,6 +475,7 @@ export default function App() {
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           fill={element.state.fill}
+          align={element.state.align}
           setCurrentElementWidth={setCurrentElementWidth}
           {...commonProps}
         />
@@ -594,6 +595,7 @@ export default function App() {
             selectedMetric={selectedMetric}
             setSelectedMetric={setSelectedMetric}
             fetchFontFamily={fetchFontFamily}
+          
             format={{ 
               widthPx: selectedW, 
               heightPx: selectedH, 
