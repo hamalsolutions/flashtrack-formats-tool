@@ -5,6 +5,9 @@ import { SketchPicker } from "react-color";
 import { ColorSwatchIcon, XIcon } from "@heroicons/react/outline";
 import { Listbox, Transition, Combobox } from '@headlessui/react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/solid';
+import LeftAlignmentIcon from '../svg/left-alignment.svg';
+import CenterAlignmentIcon from '../svg/center-alignment.svg';
+import RightAlignmentIcon from '../svg/right-alignment.svg';
 
 export const FONT_SIZE_LIST = [
   { value: 8 },
@@ -187,7 +190,10 @@ export const LoadText = ({
   fontSize,
   fill,
   selectedElement,
-  setCurrentElementWidth
+  setCurrentElementWidth,
+  onDragMove,
+  onDragEnd,
+  align
 }) => {
   const textRef = useRef();
   const trRef = useRef();
@@ -225,12 +231,16 @@ export const LoadText = ({
             width={width}
             height={height}
             draggable={draggable}
+            align={align}
             onDragEnd={(e) => {
               const node = textRef.current;
               onChange({
                   x: node.x(),
                   y: node.y(),
               });
+              if (onDragEnd) {
+                        onDragEnd(e);
+                    }
             }}
             onClick={onSelect}
             onTap={onSelect}
@@ -261,6 +271,7 @@ export const LoadText = ({
                 scaleY: 1,
               });
             }}
+            onDragMove={onDragMove}
         />
         {isSelected && (
           <Transformer
@@ -289,6 +300,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
   const [defaultFontSize, setDefaultFontSize] = useState(fontSize);
   const [fontFileName, setFontFileName] = useState("arial.ttf");
   const [error, setError] = useState(false);
+  const [alignment, setAlignment] = useState('left');
 
   const button = document.getElementById("add-text-button");
 
@@ -420,6 +432,14 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
     }
   }
 
+  const handleAlignmentChange = (alignment) => {
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, 'align', alignment);
+    } else {
+      setAlignment(alignment);
+    }
+  };
+ 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!newFontName.trim()) {
@@ -448,6 +468,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
       fontSize: defaultFontSize,
       fontFamily: fontFamily,
       fill: color,
+      align: alignment
     };
     const newText = new konvaText(attrs);
     const width = newText.width();
@@ -467,7 +488,6 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
     });
   };
   
-
   return (
     <div>
       <div className="flex justify-between w-full mb-4 pb-4">
@@ -572,6 +592,27 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
             </div>
           )}
         </div>
+      </div>
+      <div className="flex justify-start mt-4 space-x-2">
+        {/* Button Alignment text */}
+        <button
+          className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300 ${ selectedElement?.state.align === 'left' ? 'bg-gray-200' : ''}`}
+          onClick={() => handleAlignmentChange('left')}
+        >
+          <img src={LeftAlignmentIcon} alt="Left Alignment" className="w-6 h-6" />
+        </button>
+        <button
+          className={`flex items-center justify-center px-3 py-2 rounded bg-gray-300 ${selectedElement?.state.align === 'center' ? 'bg-gray-200' : ''} `}
+          onClick={() => handleAlignmentChange('center')}
+        >
+          <img src={CenterAlignmentIcon} alt="Center Alignment" className="w-6 h-6" />
+        </button>
+        <button
+          className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300 ${selectedElement?.state.align === 'right' ? 'bg-gray-200' : ''}`}
+          onClick={() => handleAlignmentChange('right')}
+        >
+          <img src={RightAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
+        </button>
       </div>
     </div>
   );

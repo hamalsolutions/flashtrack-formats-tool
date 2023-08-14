@@ -15,7 +15,10 @@ export const LoadImage = ({
     isSelected,
     onSelect,
     onChange,
-    isBarcode
+    isBarcode,
+    onDragMove,
+    onDragEnd,
+    setCurrentElementWidth,
 }) => {
     const imageRef = useRef();
     const trRef = useRef();
@@ -26,9 +29,10 @@ export const LoadImage = ({
         if (isSelected) {
             trRef.current.nodes([imageRef.current]);
             trRef.current.getLayer().batchDraw();
+            setCurrentElementWidth(imageRef.current.width());
         }
     }, [isSelected]);
-
+    
     return (
         <Fragment>
             <Image
@@ -44,6 +48,10 @@ export const LoadImage = ({
                         x: node.x(),
                         y: node.y(),
                     });
+                    // Llama a la función onDragEnd si está definida
+                    if (onDragEnd) {
+                        onDragEnd(e);
+                    }
                 }}
                 id={id}
                 onClick={onSelect}
@@ -55,7 +63,9 @@ export const LoadImage = ({
                     const scaleY = node.scaleY();
                     let width = Math.max(5, node.width() * scaleX);
                     let height = Math.max(node.height() * scaleY);
-
+                    if(!isBarcode){
+                        setCurrentElementWidth(width);
+                    }
                     if (isBarcode) {
                         width = node.width();
                         height = node.height();
@@ -71,6 +81,8 @@ export const LoadImage = ({
                         height,
                     });
                 }}
+                // Llama a la función onDragMove si está definida
+                onDragMove={onDragMove}
             />
             {isSelected && (
                 <Transformer
@@ -86,6 +98,7 @@ export const LoadImage = ({
         </Fragment>
     );
 };
+
 
 export default function ImageEditor({ imageList, setImageList, onChange }) {
     const [view, setView] = useState("images");
