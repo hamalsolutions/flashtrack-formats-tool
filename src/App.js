@@ -57,6 +57,101 @@ export default function App() {
   // I added a text element as an example
   const [canvasElements, setCanvasElements] = useState([]);
 
+  const [guideLines, setGuideLines] = useState({ vertical: null, horizontal: null });
+  const [showGuides, setShowGuides] = useState(false);
+  const [lineEnds, setLineEnds] = useState({ endX: null, endY: null });
+ 
+  const handleDragMove = (e) => {
+    const shape = e.target;
+    const layer = shape.getLayer();
+    const shapes = layer.find(node => node.getClassName() === 'Image' || node.getClassName() === 'Text');
+    setShowGuides(true);
+    let lineGuideX = null;
+    let lineGuideY = null;
+    let lineEndX = null;
+    let lineEndY = null;
+  
+    shapes.forEach((guideShape) => {
+        if (guideShape === shape) {
+            return;
+        }
+  
+        // Calculate the center of the dragged image
+        const draggedCenterX = shape.x() + shape.width() / 2;
+        const draggedCenterY = shape.y() + shape.height() / 2;
+  
+        // Calculate the center of the guide image
+        const guideCenterX = guideShape.x() + guideShape.width() / 2;
+        const guideCenterY = guideShape.y() + guideShape.height() / 2;
+  
+        if (Math.abs(draggedCenterX - guideCenterX) < 5 ) {
+            lineGuideX = guideCenterX;
+        }
+  
+        if (Math.abs(draggedCenterY - guideCenterY) < 5) {
+            lineGuideY = guideCenterY;
+        }
+
+        // Calculate the ends of the guide image
+        const guideLeftX = guideShape.x();
+        const guideTopY = guideShape.y();
+        const guideRightX = guideShape.x() + guideShape.width();
+        const guideBottomY = guideShape.y() + guideShape.height();
+        
+        const shapeLeftX = shape.x();
+        const shapeTopY = shape.y();
+  
+        if (Math.abs(shapeLeftX - guideRightX) < 5) {
+            lineEndX = guideRightX;
+        }
+
+        if (Math.abs(shapeTopY - guideBottomY) < 5) {
+            lineEndY = guideBottomY;
+        }
+  
+        if (Math.abs(shape.x() - guideLeftX) < 5) {
+            lineEndX = guideLeftX;
+        }
+
+        if (Math.abs(shape.y() - guideTopY) < 5) {
+            lineEndY = guideTopY;
+        }
+
+        if (Math.abs(shape.x() + shape.width() - guideRightX) < 5 ) {
+            lineEndX = guideRightX;
+        }
+
+        if (Math.abs(shape.y() + shape.height() - guideBottomY) < 5) {
+            lineEndY = guideBottomY;
+        }
+
+        if (Math.abs(shape.x() + shape.width() - guideLeftX) < 5) {
+            lineEndX = guideLeftX;
+        }
+
+        if (Math.abs(shape.y() + shape.height() - guideTopY) < 5) {
+            lineEndY = guideTopY; 
+        }
+    });
+
+    setGuideLines({ vertical: lineGuideX, horizontal: lineGuideY });
+    setLineEnds({ endX: lineEndX, endY: lineEndY });
+  
+    shape.position({
+        x: lineGuideX !== null ? lineGuideX - shape.width() / 2 : shape.x(),
+        y: lineGuideY !== null ? lineGuideY - shape.height() / 2 : shape.y(),
+    });
+  
+    stageRef.current.batchDraw();
+};
+
+
+  const handleDragEnd = () => {
+    setShowGuides(false);
+    setGuideLines({ vertical: null, horizontal: null });
+  };
+  
+
   const applyTemplate = (template) => {
     setWidth(template.design.format.width);
     setHeight(template.design.format.height);
@@ -202,7 +297,7 @@ export default function App() {
   }, []);
   
   const [fontFamily, setFontFamily] = useState(fontFamilyList[0]?.name);
-  const [fontSize, setFontSize] = useState(48);
+  const [fontSize, setFontSize] = useState(24);
 
   // we must load images from database to this state or local storage
   const [imageList, setImageList] = useState([]);
@@ -360,7 +455,17 @@ export default function App() {
   
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
-    if (element.type === 'text') {
+    const { type, draggable, ...rest } = element;
+    const commonProps = {
+      draggable,
+      onDragMove: rest.onDragMove,
+      onDragEnd: rest.onDragEnd,   
+      isSelected: selectedElement && selectedElement.id === element.id,
+      onSelect: () => onSelect(element),
+      onChange: (newAttrs) => onChange(element, newAttrs),
+    };
+  
+    if (type === 'text') {
       return (
         <LoadText
           id={element.id}
@@ -369,16 +474,14 @@ export default function App() {
           y={element.state.y}
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
-          draggable={element.draggable}
           fill={element.state.fill}
-          onSelect={() => onSelect(element)}
-          isSelected={selectedElement && selectedElement.id === element.id}
-          onChange={(newAttrs) => onChange(element, newAttrs)}
+          align={element.state.align}
           setCurrentElementWidth={setCurrentElementWidth}
+          {...commonProps}
         />
       );
     }
-    if (element.type === 'Checkbox') {
+    if (type === 'Checkbox') {
       return (
         <LoadField
           id={element.id}
@@ -387,16 +490,13 @@ export default function App() {
           y={element.state.y}
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
-          draggable={element.draggable}
           fill={element.state.fill}
-          onSelect={() => onSelect(element)}
-          isSelected={selectedElement && selectedElement.id === element.id}
-          onChange={(newAttrs) => onChange(element, newAttrs)}
           setCurrentElementWidth={setCurrentElementWidth}
+          {...commonProps}
         />
       );
     }
-    if (element.type === 'image' || element.type === 'barcode') {
+    if (type === 'image' || type === 'barcode') {
       return (
         <LoadImage
           id={element.id}
@@ -405,16 +505,15 @@ export default function App() {
           y={element.state.y}
           width={element.state.width}
           height={element.state.height}
-          draggable={element.draggable}
-          isSelected={selectedElement && selectedElement.id === element.id}
-          onSelect={() => onSelect(element)}
-          onChange={(newAttrs) => onChange(element, newAttrs)}
-          isBarcode={element.type === 'barcode'}
+          isBarcode={type === 'barcode'}
+          setCurrentElementWidth={setCurrentElementWidth}
+          {...commonProps}
         />
       );
     }
     return <></>;
   };
+  
 
   // deselect when clicked on empty area
   const handleDeselectElement = (e) => {
@@ -581,6 +680,7 @@ export default function App() {
             selectedMetric={selectedMetric}
             setSelectedMetric={setSelectedMetric}
             fetchFontFamily={fetchFontFamily}
+          
             format={{ 
               widthPx: selectedW, 
               heightPx: selectedH, 
@@ -654,8 +754,7 @@ export default function App() {
                 display: 'flex'
               }}
             >
-
-              <Stage
+            <Stage
                 width={selectedW}
                 height={selectedH}
                 onMouseDown={handleDeselectElement}
@@ -663,19 +762,65 @@ export default function App() {
                 ref={stageRef}
                 >
                 <Layer>
+                  {/* Fondo */}
                   <Rect
                     width={selectedW}
                     height={selectedH}
                     fill={selectedColor.hex}
                     id="background"
                   />
+
+                  {/* Elementos arrastrables */}
                   {canvasElements.map((element) => (
                     <Fragment key={element.id}>
-                      {getCanvasElement(element)}
+                      {getCanvasElement({
+                        ...element,
+                        draggable: true,
+                        onDragMove: handleDragMove,
+                        onDragEnd: handleDragEnd,
+                      })}
                     </Fragment>
                   ))}
+
+                  {showGuides && (
+                    <>
+                        {guideLines.horizontal  !== null && (
+                          <Line
+                            points={[0, guideLines.horizontal, selectedW, guideLines.horizontal]}
+                            stroke="rgb(0, 161, 255)"
+                            strokeWidth={1}
+                            dash={[4, 6]}
+                          />
+                        )}
+                        {guideLines.vertical !== null && (
+                          <Line
+                            points={[guideLines.vertical, 0, guideLines.vertical, selectedH]}
+                            stroke="rgb(0, 161, 255)"
+                            strokeWidth={1}
+                            dash={[4, 6]}
+                          />
+                        )}
+                        {lineEnds.endX !== null && (
+                          <Line
+                            points={[lineEnds.endX, 0, lineEnds.endX, selectedH]}
+                            stroke="rgb(0, 161, 255)" 
+                            strokeWidth={1}
+                            dash={[4, 6]}
+                          />
+                        )}
+                        {lineEnds.endY !== null && (
+                          <Line
+                            points={[0, lineEnds.endY, selectedW, lineEnds.endY]}
+                            stroke="rgb(0, 161, 255)" 
+                            strokeWidth={1}
+                            dash={[4, 6]}
+                          />
+                        )}
+                      </>
+                    )}
                 </Layer>
               </Stage>
+
 
 
             </div>
