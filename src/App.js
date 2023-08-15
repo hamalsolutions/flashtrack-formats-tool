@@ -1,5 +1,5 @@
 import { React, Fragment, useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Rect, Line } from 'react-konva';
+import { Stage, Layer, Rect, Line, Text } from 'react-konva';
 import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
@@ -469,9 +469,6 @@ export default function App() {
     setRedoStack([]);
   };
 
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [containerHeight, setContainerHeight] = useState(0);
-
   useEffect(() => {
     const containerElement = document.getElementById("grayArea");
     if (containerElement) {
@@ -480,44 +477,83 @@ export default function App() {
     }
   }, []);
 
-  const rulerLines = [];
-  const cmInterval = 20;
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
 
-  // Rulers
-  for (let i = 0; i <= containerWidth; i += cmInterval) {
-    rulerLines.push(
+  const pixelsPerInch = inchesToPixels; // Pixeles por pulgada
+  const inchHeight = 25; // Altura de las divisiones de pulgada
+  const halfHeight = 20; // Altura de las divisiones de 1/2 pulgada
+  const quarterHeight = 15; // Altura de las divisiones de 1/4 pulgada
+  const eighthHeight = 10; // Altura de las divisiones de 1/8 pulgada
+  const sixteenthHeight = 5; // Altura de las divisiones de 1/16 pulgada
+  const inches = 12; // Longitud total en pulgadas
+
+  const numDivisions = inches * 16;
+
+  const horizontalLines = [];
+  const horizontalTexts = [];
+  const verticalLines = [];
+  const verticalTexts = [];
+
+  for (let i = 0; i <= numDivisions; i++) {
+    const xPos = (i * ((pixelsPerInch / 16)*zoom)) + 24;
+    const yPos = (i * ((pixelsPerInch / 16)*zoom)) + 24;
+    const isLargeDivision = i % 16 === 0;
+    const isHalfDivision = i % 8 === 0 && !isLargeDivision;
+    const isQuarterDivision = i % 4 === 0 && !isHalfDivision;
+    const isEighthDivision = i % 2 === 0 && !isQuarterDivision;
+    const isSixteenthDivision = !isLargeDivision && !isHalfDivision && !isQuarterDivision && !isEighthDivision;
+
+    let divisionHeight = 0;
+
+    if (isLargeDivision) divisionHeight = inchHeight;
+    else if (isHalfDivision) divisionHeight = halfHeight;
+    else if (isQuarterDivision) divisionHeight = quarterHeight;
+    else if (isEighthDivision) divisionHeight = eighthHeight;
+    else if (isSixteenthDivision) divisionHeight = sixteenthHeight;
+
+    horizontalLines.push(
       <Line
-        key={`horizontal-${i}`}
-        points={[0, i, 10, i]}
+        key={`hline-${i}`}
+        points={[xPos, 0, xPos, divisionHeight]}
         stroke="black"
+        strokeWidth={isLargeDivision ? 2 : 1.5}
       />
     );
-    rulerLines.push(
+
+    verticalLines.push(
       <Line
-        key={`vertical-${i}`}
-        points={[i, 0, i, 10]}
+        key={`vline-${i}`}
+        points={[0, yPos, divisionHeight, yPos]}
         stroke="black"
+        strokeWidth={isLargeDivision ? 2 : 1.5}
       />
     );
 
-    for (let j = 1; j < cmInterval; j++) {
-      rulerLines.push(
-        <Line
-          key={`horizontal-small-${i}-${j}`}
-          points={[0, i + (j * cmInterval) / 2, 5, i + (j * cmInterval) / 2]}
-          stroke="black"
+    if (isLargeDivision) {
+      const inchValue = i / 16 > 0 ? `${i / 16}"` : '';
+      horizontalTexts.push(
+        <Text
+          key={`htext-${i}`}
+          x={xPos - 4} // Ajusta la posición del texto
+          y={inchHeight + 5} // Ajusta la posición del texto
+          text={inchValue}
+          fontSize={10}
         />
       );
-      rulerLines.push(
-        <Line
-          key={`vertical-small-${i}-${j}`}
-          points={[i + (j * cmInterval) / 2, 0, i + (j * cmInterval) / 2, 5]}
-          stroke="black"
+
+      verticalTexts.push(
+        <Text
+          key={`vtext-${i}`}
+          x={divisionHeight + 5} // Ajusta la posición del texto
+          y={yPos - 4} // Ajusta la posición del texto
+          text={inchValue}
+          fontSize={10}
         />
       );
     }
   }
-
+  
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
@@ -577,14 +613,22 @@ export default function App() {
             style={{ 
               width: "100%",
               height: "100%",
-              position: "absolute"
-            }}>
-              <Stage 
-                width={containerWidth}
-                height={containerHeight}
-              >
-                <Layer>{rulerLines}</Layer>
-              </Stage>
+              position: 'absolute'
+            }}
+          >
+            <Stage 
+              width={containerWidth}
+              height={containerHeight}
+            >
+              <Layer>
+                {horizontalLines}
+                {horizontalTexts}
+              </Layer>
+              <Layer>
+                {verticalLines}
+                {verticalTexts}
+              </Layer>
+            </Stage>
           </div>
           <div
             style={{
@@ -610,6 +654,7 @@ export default function App() {
                 display: 'flex'
               }}
             >
+
               <Stage
                 width={selectedW}
                 height={selectedH}
