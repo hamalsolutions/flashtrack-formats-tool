@@ -595,8 +595,8 @@ export default function App() {
   const verticalTexts = [];
 
   for (let i = 0; i <= numDivisions; i++) {
-    const xPos = (i * ((pixelsPerInch / 16)*zoom)) + 24;
-    const yPos = (i * ((pixelsPerInch / 16)*zoom)) + 24;
+    const xPos = (i * ((pixelsPerInch / 16) * zoom)) + 47;
+    const yPos = (i * ((pixelsPerInch / 16) * zoom)) + 40;
     const isLargeDivision = i % 16 === 0;
     const isHalfDivision = i % 8 === 0 && !isLargeDivision;
     const isQuarterDivision = i % 4 === 0 && !isHalfDivision;
@@ -604,17 +604,33 @@ export default function App() {
     const isSixteenthDivision = !isLargeDivision && !isHalfDivision && !isQuarterDivision && !isEighthDivision;
 
     let divisionHeight = 0;
+    let positionPivot = 0;
 
-    if (isLargeDivision) divisionHeight = inchHeight;
-    else if (isHalfDivision) divisionHeight = halfHeight;
-    else if (isQuarterDivision) divisionHeight = quarterHeight;
-    else if (isEighthDivision) divisionHeight = eighthHeight;
-    else if (isSixteenthDivision) divisionHeight = sixteenthHeight;
+    if (isLargeDivision){ 
+      divisionHeight = inchHeight + 15;
+      positionPivot = 15;
+    }
+    else if (isHalfDivision){ 
+      divisionHeight = halfHeight + 20;
+      positionPivot = 20;
+    }
+    else if (isQuarterDivision){ 
+      divisionHeight = quarterHeight + 25;
+      positionPivot = 25;
+    }
+    else if (isEighthDivision){ 
+      divisionHeight = eighthHeight + 30;
+      positionPivot = 30;
+    }
+    else if (isSixteenthDivision){ 
+      divisionHeight = sixteenthHeight + 35;
+      positionPivot = 35;
+    }
 
     horizontalLines.push(
       <Line
         key={`hline-${i}`}
-        points={[xPos, 0, xPos, divisionHeight]}
+        points={[xPos, positionPivot, xPos, divisionHeight]}
         stroke="black"
         strokeWidth={isLargeDivision ? 2 : 1.5}
       />
@@ -623,19 +639,19 @@ export default function App() {
     verticalLines.push(
       <Line
         key={`vline-${i}`}
-        points={[0, yPos, divisionHeight, yPos]}
+        points={[positionPivot + 7, yPos, divisionHeight + 7, yPos]}
         stroke="black"
         strokeWidth={isLargeDivision ? 2 : 1.5}
       />
     );
 
-    if (isLargeDivision) {
+    if (isLargeDivision || isHalfDivision) {
       const inchValue = i / 16 > 0 ? `${i / 16}"` : '';
       horizontalTexts.push(
         <Text
           key={`htext-${i}`}
-          x={xPos - 4} // Ajusta la posición del texto
-          y={inchHeight + 5} // Ajusta la posición del texto
+          x={xPos - 3}
+          y={5}
           text={inchValue}
           fontSize={10}
         />
@@ -644,8 +660,8 @@ export default function App() {
       verticalTexts.push(
         <Text
           key={`vtext-${i}`}
-          x={divisionHeight + 5} // Ajusta la posición del texto
-          y={yPos - 4} // Ajusta la posición del texto
+          x={5}
+          y={yPos - 5}
           text={inchValue}
           fontSize={10}
         />
@@ -721,12 +737,12 @@ export default function App() {
               height={containerHeight}
             >
               <Layer>
-                {horizontalLines}
                 {horizontalTexts}
+                {horizontalLines}
               </Layer>
               <Layer>
-                {verticalLines}
                 {verticalTexts}
+                {verticalLines}
               </Layer>
             </Stage>
           </div>
@@ -735,10 +751,7 @@ export default function App() {
               width: '100%',
               height: '80vh',
               backgroundColor: '#CDCBCB',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              overflow: 'scroll'
+              overflow: 'auto',
             }}
             onMouseDown={handleDeselectElement}
             onTouchStart={handleDeselectElement}
@@ -750,8 +763,8 @@ export default function App() {
               style={{
                 width: `${selectedW}px`,
                 height: `${selectedH}px`,
-                margin: '5px',
-                display: 'flex'
+                marginLeft: '47px',
+                marginTop: '40px',
               }}
             >
             <Stage
