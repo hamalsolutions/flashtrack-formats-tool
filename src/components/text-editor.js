@@ -8,6 +8,8 @@ import { CheckIcon, ChevronDownIcon } from '@heroicons/react/solid';
 import LeftAlignmentIcon from '../svg/left-alignment.svg';
 import CenterAlignmentIcon from '../svg/center-alignment.svg';
 import RightAlignmentIcon from '../svg/right-alignment.svg';
+import Konva from 'konva';
+import { inchesToPixels, centimetersToPixels } from './sizelabel-editor';
 
 export const FONT_SIZE_LIST = [
   { value: 8 },
@@ -289,7 +291,7 @@ export const LoadText = ({
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement, fetchFontFamily}){
+export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement, fetchFontFamily, align, selectedMetric, width}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState('');
@@ -301,6 +303,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
   const [fontFileName, setFontFileName] = useState("arial.ttf");
   const [error, setError] = useState(false);
   const [alignment, setAlignment] = useState('left');
+  const [layer, setLayer] = useState(null);
 
   const button = document.getElementById("add-text-button");
 
@@ -355,6 +358,16 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
     document.head.appendChild(customFontsStylesheet);
   }, [fontFamilyList]);
 
+  useEffect(() => {
+    const newLayer = new Konva.Layer();
+    setLayer(newLayer);
+    newLayer.add(new Konva.Text()); 
+  
+    return () => {
+      newLayer.remove();
+    };
+  }, []);
+
   //Permite modificar el elemento seleccionado
   const updateSelectedElement = (id, property, value) => {
     const element = canvasElements.find((element) => element.id === id);
@@ -394,9 +407,42 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
 
   const handleTextContent = (event) => {
     if (isSelectedElement) {
-      updateSelectedElement(selectedElement.id, "text", event.target.value);
-    }else{
-     setTextContent(event.target.value);
+      const newText = event.target.value;
+      let x;
+      const fontSize = isSelectedElement ? selectedElement.state.fontSize : defaultFontSize;
+      const fontFamily = isSelectedElement ? selectedElement.state.fontFamily : fontFamily;
+  
+      const tempText = new Konva.Text({
+        text: newText,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+      });
+  
+      layer.add(tempText);
+      tempText.hide();
+      layer.draw();
+  
+      const newWidth = tempText.width();
+
+      const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
+      
+      const widthFinal = Math.min(newWidth, canvasWidth);
+      
+      if (align === "right") {
+        x = (canvasWidth - widthFinal) - (canvasWidth * 0.01);
+      } else if (align === "center") {
+        x = (canvasWidth / 2) - (widthFinal / 2);
+      }
+      
+      if (x) {
+        updateSelectedElement(selectedElement.id, ["text", "width", "x"], [newText, widthFinal, x]);
+      } else {
+        updateSelectedElement(selectedElement.id, ["text", "width"], [newText, widthFinal]);
+      }
+      tempText.destroy();
+      layer.draw();
+    } else {
+      setTextContent(event.target.value);
     }
   };
 

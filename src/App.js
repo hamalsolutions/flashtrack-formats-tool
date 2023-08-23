@@ -1,5 +1,5 @@
 import { React, Fragment, useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Rect, Line } from 'react-konva';
+import { Stage, Layer, Rect, Line, Text } from 'react-konva';
 import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
@@ -50,13 +50,13 @@ export default function App() {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [fontFamilyList, setFontFamilyList] = useState([]);
+  const [align, setAlign] = useState("none");
   // maximum amount of elements to store in the undo stack
   const maxHistoryStackLength = 10;
 
   // CANVAS ELEMENTS, please add all elements you want to render in the canvas
   // I added a text element as an example
   const [canvasElements, setCanvasElements] = useState([]);
-
   const [guideLines, setGuideLines] = useState({ vertical: null, horizontal: null });
   const [showGuides, setShowGuides] = useState(false);
   const [lineEnds, setLineEnds] = useState({ endX: null, endY: null });
@@ -464,7 +464,7 @@ export default function App() {
       onSelect: () => onSelect(element),
       onChange: (newAttrs) => onChange(element, newAttrs),
     };
-  
+
     if (type === 'text') {
       return (
         <LoadText
@@ -472,6 +472,7 @@ export default function App() {
           text={element.state.text}
           x={element.state.x}
           y={element.state.y}
+          width={element.state.width}
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           fill={element.state.fill}
@@ -568,6 +569,107 @@ export default function App() {
     setRedoStack([]);
   };
 
+  useEffect(() => {
+    const containerElement = document.getElementById("grayArea");
+    if (containerElement) {
+      setContainerWidth(containerElement.clientWidth);
+      setContainerHeight(containerElement.clientHeight);
+    }
+  }, []);
+
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  const pixelsPerInch = inchesToPixels; // Pixeles por pulgada
+  const inchHeight = 25; // Altura de las divisiones de pulgada
+  const halfHeight = 20; // Altura de las divisiones de 1/2 pulgada
+  const quarterHeight = 15; // Altura de las divisiones de 1/4 pulgada
+  const eighthHeight = 10; // Altura de las divisiones de 1/8 pulgada
+  const sixteenthHeight = 5; // Altura de las divisiones de 1/16 pulgada
+  const inches = 12; // Longitud total en pulgadas
+
+  const numDivisions = inches * 16;
+
+  const horizontalLines = [];
+  const horizontalTexts = [];
+  const verticalLines = [];
+  const verticalTexts = [];
+
+  for (let i = 0; i <= numDivisions; i++) {
+    const xPos = (i * ((pixelsPerInch / 16) * zoom)) + 47;
+    const yPos = (i * ((pixelsPerInch / 16) * zoom)) + 40;
+    const isLargeDivision = i % 16 === 0;
+    const isHalfDivision = i % 8 === 0 && !isLargeDivision;
+    const isQuarterDivision = i % 4 === 0 && !isHalfDivision;
+    const isEighthDivision = i % 2 === 0 && !isQuarterDivision;
+    const isSixteenthDivision = !isLargeDivision && !isHalfDivision && !isQuarterDivision && !isEighthDivision;
+
+    let divisionHeight = 0;
+    let positionPivot = 0;
+
+    if (isLargeDivision){ 
+      divisionHeight = inchHeight + 15;
+      positionPivot = 15;
+    }
+    else if (isHalfDivision){ 
+      divisionHeight = halfHeight + 20;
+      positionPivot = 20;
+    }
+    else if (isQuarterDivision){ 
+      divisionHeight = quarterHeight + 25;
+      positionPivot = 25;
+    }
+    else if (isEighthDivision){ 
+      divisionHeight = eighthHeight + 30;
+      positionPivot = 30;
+    }
+    else if (isSixteenthDivision){ 
+      divisionHeight = sixteenthHeight + 35;
+      positionPivot = 35;
+    }
+
+    horizontalLines.push(
+      <Line
+        key={`hline-${i}`}
+        points={[xPos, positionPivot, xPos, divisionHeight]}
+        stroke="black"
+        strokeWidth={isLargeDivision ? 2 : 1.5}
+      />
+    );
+
+    verticalLines.push(
+      <Line
+        key={`vline-${i}`}
+        points={[positionPivot + 7, yPos, divisionHeight + 7, yPos]}
+        stroke="black"
+        strokeWidth={isLargeDivision ? 2 : 1.5}
+      />
+    );
+
+    if (isLargeDivision || isHalfDivision) {
+      const inchValue = i / 16 > 0 ? `${i / 16}"` : '';
+      horizontalTexts.push(
+        <Text
+          key={`htext-${i}`}
+          x={xPos - 3}
+          y={5}
+          text={inchValue}
+          fontSize={10}
+        />
+      );
+
+      verticalTexts.push(
+        <Text
+          key={`vtext-${i}`}
+          x={5}
+          y={yPos - 5}
+          text={inchValue}
+          fontSize={10}
+        />
+      );
+    }
+  }
+  
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
@@ -595,6 +697,8 @@ export default function App() {
             selectedMetric={selectedMetric}
             setSelectedMetric={setSelectedMetric}
             fetchFontFamily={fetchFontFamily}
+            align={align}
+            width={width}
           
             format={{ 
               widthPx: selectedW, 
@@ -622,17 +726,37 @@ export default function App() {
             width={width}
             selectedMetric={selectedMetric}
             currentElementWidth={currentElementWidth}
+            align={align}
+            setAlign={setAlign}
           />
           {/* A partir de aqui Canvas*/}
+          <div 
+            style={{ 
+              width: "100%",
+              height: "100%",
+              position: 'absolute'
+            }}
+          >
+            <Stage 
+              width={containerWidth}
+              height={containerHeight}
+            >
+              <Layer>
+                {horizontalTexts}
+                {horizontalLines}
+              </Layer>
+              <Layer>
+                {verticalTexts}
+                {verticalLines}
+              </Layer>
+            </Stage>
+          </div>
           <div
             style={{
               width: '100%',
               height: '80vh',
               backgroundColor: '#CDCBCB',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              overflow: 'scroll'
+              overflow: 'auto',
             }}
             onMouseDown={handleDeselectElement}
             onTouchStart={handleDeselectElement}
@@ -644,7 +768,8 @@ export default function App() {
               style={{
                 width: `${selectedW}px`,
                 height: `${selectedH}px`,
-                margin: '5px',
+                marginLeft: '47px',
+                marginTop: '40px',
               }}
             >
             <Stage
@@ -653,7 +778,7 @@ export default function App() {
                 onMouseDown={handleDeselectElement}
                 onTouchStart={handleDeselectElement}
                 ref={stageRef}
-              >
+                >
                 <Layer>
                   {/* Fondo */}
                   <Rect
