@@ -50,13 +50,13 @@ export default function App() {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [fontFamilyList, setFontFamilyList] = useState([]);
+  const [align, setAlign] = useState("none");
   // maximum amount of elements to store in the undo stack
   const maxHistoryStackLength = 10;
 
   // CANVAS ELEMENTS, please add all elements you want to render in the canvas
   // I added a text element as an example
   const [canvasElements, setCanvasElements] = useState([]);
-
   const [guideLines, setGuideLines] = useState({ vertical: null, horizontal: null });
   const [showGuides, setShowGuides] = useState(false);
   const [lineEnds, setLineEnds] = useState({ endX: null, endY: null });
@@ -464,7 +464,7 @@ export default function App() {
       onSelect: () => onSelect(element),
       onChange: (newAttrs) => onChange(element, newAttrs),
     };
-  
+
     if (type === 'text') {
       return (
         <LoadText
@@ -472,6 +472,7 @@ export default function App() {
           text={element.state.text}
           x={element.state.x}
           y={element.state.y}
+          width={element.state.width}
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           fill={element.state.fill}
@@ -696,6 +697,8 @@ export default function App() {
             selectedMetric={selectedMetric}
             setSelectedMetric={setSelectedMetric}
             fetchFontFamily={fetchFontFamily}
+            align={align}
+            width={width}
           
             format={{ 
               widthPx: selectedW, 
@@ -723,6 +726,8 @@ export default function App() {
             width={width}
             selectedMetric={selectedMetric}
             currentElementWidth={currentElementWidth}
+            align={align}
+            setAlign={setAlign}
           />
           {/* A partir de aqui Canvas*/}
           <div 

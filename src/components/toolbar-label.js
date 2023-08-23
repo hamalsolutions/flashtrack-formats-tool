@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Disclosure } from '@headlessui/react';
 import { FONT_SIZE_LIST, SizeMenu, FontFamilyMenu } from './text-editor';
 import { SketchPicker } from "react-color";
+import Konva from 'konva';
 import {
   TrashIcon,
   ArrowNarrowLeftIcon,
@@ -38,7 +39,9 @@ export default function ToolbarLabel({
   fontFamilyList,
   width,
   selectedMetric,
-  currentElementWidth
+  currentElementWidth,
+  align,
+  setAlign
 }) {
   
   const [formatName, setFormatName] = useState('newlabel');
@@ -49,7 +52,7 @@ export default function ToolbarLabel({
   const [defaultColor, setDefaultColor] = useState('#000000');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [customFonts, setCustomFonts] = useState([]);
-  const [align, setAlign] = useState("none");
+  const [layer, setLayer] = useState(null);
   
   const isSelectedTextElement = !!selectedElement && (selectedElement?.type === 'text' || selectedElement?.type === 'Checkbox');
   
@@ -86,6 +89,7 @@ export default function ToolbarLabel({
     }
   }
 
+
   const handleFontFamilySelect = (fontFamily) => {
     if (isSelectedTextElement) {
       const fontFile = allFonts.find(font => font.value === fontFamily)?.file;
@@ -98,20 +102,68 @@ export default function ToolbarLabel({
         onChange(element, stateAttrs);
         setDefaultFontFamily(fontFamily);
       }
-    }
+  }
+   
+    useEffect(() => {
+      // Create a new instance of Konva.Layer when the component is mounted
+      const newLayer = new Konva.Layer();
+      setLayer(newLayer);
     
-    const handleTextSelect = (event) => {
-      if (isSelectedTextElement) {
-        const { element, stateAttrs } = getUpdatedElementAttrs(
-          canvasElements,
+      // Important: Add the new layer to the stage (stage)
+      newLayer.add(new Konva.Text()); // Agrega un objeto temporal para evitar errores
+    
+      // Cleaning when disassembling the component
+      return () => {
+        // Remove stage layer on dismount
+        newLayer.remove();
+      };
+    }, []);
+    
+    
+  const handleTextSelect = (event) => {
+    if (isSelectedTextElement) {
+      const newText = event.target.value;
+      const fontSize = isSelectedTextElement ? selectedElement.state.fontSize : defaultFontSize;
+      const fontFamily = isSelectedTextElement ? selectedElement.state.fontFamily : defaultFontFamily;
+  
+      const tempText = new Konva.Text({
+        text: newText,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+      });
+  
+      // Add the temporary object to the stage out of view to measure the width
+      layer.add(tempText);
+      tempText.hide();
+      layer.draw();
+  
+      const newWidth = tempText.width();
+  
+      // Removes the temporary object from the stage
+      tempText.destroy();
+      layer.draw();
+  
+      const { element, stateAttrs } = getUpdatedElementAttrs(
+        canvasElements,
         selectedElement.id,
         'text',
-        event.target.value
-        );
-        onChange(element, stateAttrs);
-        setDefaultText(event.target.value);
+        newText
+      );
+  
+      const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
+      
+      stateAttrs.width = Math.min(newWidth, canvasWidth);
+  
+      if (align === "right") {
+        stateAttrs.x = (canvasWidth - stateAttrs.width) - (canvasWidth * 0.01);
+      } else if (align === "center") {
+        stateAttrs.x = (canvasWidth / 2) - (stateAttrs.width / 2);
       }
+  
+      onChange(element, stateAttrs);
+      setDefaultText(newText);
     }
+  };
   
   const handleColorSelect = (newColor) => {
     if (isSelectedTextElement) {
@@ -129,7 +181,7 @@ export default function ToolbarLabel({
   const handleSelectAlign = (e) => {
     if (selectedElement) {
       const canvasWidth = Math.floor((selectedMetric === 'in') ? width  * inchesToPixels : width  * centimetersToPixels);  
-      const elementWidth = currentElementWidth;
+      const elementWidth = selectedElement.state.width;
       const selectAlign = e.target.value;
       let x = 0;
       switch (selectAlign) {
