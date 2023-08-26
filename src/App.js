@@ -51,6 +51,7 @@ export default function App() {
   const [redoStack, setRedoStack] = useState([]);
   const [fontFamilyList, setFontFamilyList] = useState([]);
   const [align, setAlign] = useState("none");
+  const [position, setPosition] = useState("none");
   // maximum amount of elements to store in the undo stack
   const maxHistoryStackLength = 10;
 
@@ -699,6 +700,8 @@ export default function App() {
             fetchFontFamily={fetchFontFamily}
             align={align}
             width={width}
+            position ={position}
+            setPosition ={setPosition}
           
             format={{ 
               widthPx: selectedW, 
@@ -726,8 +729,9 @@ export default function App() {
             width={width}
             selectedMetric={selectedMetric}
             currentElementWidth={currentElementWidth}
-            align={align}
             setAlign={setAlign}
+            position ={position}
+            setPosition ={setPosition}
           />
           {/* A partir de aqui Canvas*/}
           <div 

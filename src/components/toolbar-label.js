@@ -39,9 +39,9 @@ export default function ToolbarLabel({
   fontFamilyList,
   width,
   selectedMetric,
-  currentElementWidth,
-  align,
-  setAlign
+  setAlign,
+  position,
+  setPosition
 }) {
   
   const [formatName, setFormatName] = useState('newlabel');
@@ -103,7 +103,7 @@ export default function ToolbarLabel({
         setDefaultFontFamily(fontFamily);
       }
   }
-   
+
     useEffect(() => {
       // Create a new instance of Konva.Layer when the component is mounted
       const newLayer = new Konva.Layer();
@@ -149,17 +149,15 @@ export default function ToolbarLabel({
         'text',
         newText
       );
+     
+      stateAttrs.width = Math.min(newWidth);
   
-      const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
-      
-      stateAttrs.width = Math.min(newWidth, canvasWidth);
-  
-      if (align === "right") {
-        stateAttrs.x = (canvasWidth - stateAttrs.width) - (canvasWidth * 0.01);
-      } else if (align === "center") {
-        stateAttrs.x = (canvasWidth / 2) - (stateAttrs.width / 2);
+      if (position === "sides") {
+        stateAttrs.x = element.state.x - ((newWidth - element.state.width) / 2);
+      } else if (position === "right") {
+        stateAttrs.x = element.state.x - (newWidth - element.state.width);
       }
-  
+
       onChange(element, stateAttrs);
       setDefaultText(newText);
     }
@@ -221,6 +219,10 @@ export default function ToolbarLabel({
       onChange(selectedElement, { y: newY });
     }
   };
+
+  const handleSelectPosition = (e) => {
+    setPosition(e.target.value);
+  }
 
 
   return (
@@ -324,7 +326,7 @@ export default function ToolbarLabel({
                   <span className="mr-2">Align:</span>
                   <div className="relative pl-2">
                       <select 
-                        className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                        className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
                         onChange={(e) => handleSelectAlign(e)}
                         disabled={!isSelectedElemet}
                         value={"none"}
@@ -416,40 +418,64 @@ export default function ToolbarLabel({
           </div>
         </>
       </Disclosure>
-      {selectedElement ? (
+     
       <div className="overflow-hidden bg-white">
-        <div
-          className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${selectedElement ? "flex-wrap" : ""}`}
-        >
-         <div className="flex w-auto pb-2 items-center justify-center pl-4">
-                  {selectedElement && (
-                    <>
-                      <span className="mr-2">X:</span>
-                      <div className="relative pl-2">
-                        <input
-                          type="number"
-                          step="1"
-                          value={Math.floor(selectedElement.state.x)}
-                          onChange={handleXChange}
-                          className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                      <span className="mr-2">Y:</span>
-                      <div className="relative pl-2">
-                        <input
-                          type="number"
-                          step="1"
-                          value={Math.floor(selectedElement.state.y)}
-                          onChange={handleYChange}
-                          className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                    </>
-                    )}
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
+    
+          <div className={`flex w-auto pb-2 ${selectedElement?.type === "text" ? "justify-between" : "justify-center"} pl-4`}>
+              {selectedElement?.type === 'text' && (
+                <div className="pr-4">
+                  <div className="relative pl-2">
+                    <select
+                      className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
+                      onChange={(e) => handleSelectPosition(e)}
+                      disabled={!isSelectedElemet}
+                      value={position}
+                    >
+                      {
+                        isSelectedElemet
+                          ?
+                          <>
+                            <option value="none" disabled hidden>Select Position...</option>
+                            <option value="sides">Sides</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                          </>
+                          :
+                          <>
+                            <option value="none">Select a Element...</option>
+                          </>
+                      }
+                    </select>
+                  </div>
+                </div>
+              )}
+              <div className='flex items-center'>
+                <span className="mr-2">X:</span>
+                <div className="relative pl-2">
+                  <input
+                    type="number"
+                    step="1"
+                    value={Math.floor(selectedElement?.state.x ) || 0}
+                    onChange={handleXChange}
+                    className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <span className="mr-2">Y:</span>
+                <div className="relative pl-2">
+                  <input
+                    type="number"
+                    step="1"
+                    value={Math.floor(selectedElement?.state.y) || 0}
+                    onChange={handleYChange}
+                    className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
+          </div>
         </div>
       </div>
-    ) : null}
+   
     </div>
   );
 }

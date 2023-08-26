@@ -291,7 +291,7 @@ export const LoadText = ({
   );
 };
 
-export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement, fetchFontFamily, align, selectedMetric, width}){
+export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, fontSize, setFontSize, canvasElements, onChange, selectedElement, fetchFontFamily, align, selectedMetric, width, position, setPosition}){
 
   const [view, setView] = useState('fontList'); // 'fontList' o 'uploadFont'
   const [newFontName, setNewFontName] = useState('');
@@ -423,15 +423,13 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
       layer.draw();
   
       const newWidth = tempText.width();
-
-      const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
       
-      const widthFinal = Math.min(newWidth, canvasWidth);
-      
-      if (align === "right") {
-        x = (canvasWidth - widthFinal) - (canvasWidth * 0.01);
-      } else if (align === "center") {
-        x = (canvasWidth / 2) - (widthFinal / 2);
+      const widthFinal = Math.min(newWidth);
+  
+      if (position === "sides") {
+       x = selectedElement.state.x - ((newWidth - selectedElement.state.width) / 2);
+      } else if (position === "right") {
+       x = selectedElement.state.x - (newWidth - selectedElement.state.width);
       }
       
       if (x) {
