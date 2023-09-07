@@ -9,6 +9,9 @@ import {
   ArrowNarrowRightIcon,
 } from '@heroicons/react/outline';
 import { inchesToPixels, centimetersToPixels } from './sizelabel-editor';
+import LeftAlignmentIcon from '../svg/align-left.svg';
+import CenterAlignmentIcon from '../svg/align-center.svg';
+import RightAlignmentIcon from '../svg/align-right.svg';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -27,6 +30,7 @@ const getUpdatedElementAttrs = (elements, id, property, value) => {
 
 export default function ToolbarLabel({
   selectedElement,
+  selectedElements,
   deleteElementSelected,
   handleExportClick,
   selectedOption,
@@ -41,9 +45,10 @@ export default function ToolbarLabel({
   selectedMetric,
   setAlign,
   position,
-  setPosition
+  setPosition,
+  handleCanvasElementsChange
 }) {
-  
+
   const [formatName, setFormatName] = useState('newlabel');
   const [fade, setFade] = useState(false);
   const [defaultFontSize, setDefaultFontSize] = useState(0);
@@ -53,12 +58,13 @@ export default function ToolbarLabel({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [customFonts, setCustomFonts] = useState([]);
   const [layer, setLayer] = useState(null);
-  
+
   const isSelectedTextElement = !!selectedElement && (selectedElement?.type === 'text' || selectedElement?.type === 'Checkbox');
-  
+
   const allFonts = [...fontFamilyList, ...customFonts];
-  
+
   const isSelectedElemet = selectedElement !== null;
+  const isSelectedElemets = selectedElements !== null;
 
   useEffect(() => {
     if (isSelectedTextElement) {
@@ -66,7 +72,7 @@ export default function ToolbarLabel({
       setDefaultFontSize(selectedElement?.state.fontSize);
       setDefaultText(selectedElement?.state.text);
       setDefaultColor(selectedElement?.state.fill);
-      
+
       const storedFonts = localStorage.getItem('customFonts');
       if (storedFonts) {
         setCustomFonts(JSON.parse(storedFonts));
@@ -75,7 +81,7 @@ export default function ToolbarLabel({
       setFade(false);
     }
   }, [isSelectedTextElement]);
-  
+
   const handleTextSizeSelect = (fontSize) => {
     if (isSelectedTextElement) {
       const { element, stateAttrs } = getUpdatedElementAttrs(
@@ -98,60 +104,60 @@ export default function ToolbarLabel({
         selectedElement.id,
         ["fontFamily", "fontFile"],
         [fontFamily, fontFile]
-        );
-        onChange(element, stateAttrs);
-        setDefaultFontFamily(fontFamily);
-      }
+      );
+      onChange(element, stateAttrs);
+      setDefaultFontFamily(fontFamily);
+    }
   }
 
-    useEffect(() => {
-      // Create a new instance of Konva.Layer when the component is mounted
-      const newLayer = new Konva.Layer();
-      setLayer(newLayer);
-    
-      // Important: Add the new layer to the stage (stage)
-      newLayer.add(new Konva.Text()); // Agrega un objeto temporal para evitar errores
-    
-      // Cleaning when disassembling the component
-      return () => {
-        // Remove stage layer on dismount
-        newLayer.remove();
-      };
-    }, []);
-    
-    
+  useEffect(() => {
+    // Create a new instance of Konva.Layer when the component is mounted
+    const newLayer = new Konva.Layer();
+    setLayer(newLayer);
+
+    // Important: Add the new layer to the stage (stage)
+    newLayer.add(new Konva.Text()); // Agrega un objeto temporal para evitar errores
+
+    // Cleaning when disassembling the component
+    return () => {
+      // Remove stage layer on dismount
+      newLayer.remove();
+    };
+  }, []);
+
+
   const handleTextSelect = (event) => {
     if (isSelectedTextElement) {
       const newText = event.target.value;
       const fontSize = isSelectedTextElement ? selectedElement.state.fontSize : defaultFontSize;
       const fontFamily = isSelectedTextElement ? selectedElement.state.fontFamily : defaultFontFamily;
-  
+
       const tempText = new Konva.Text({
         text: newText,
         fontSize: fontSize,
         fontFamily: fontFamily,
       });
-  
+
       // Add the temporary object to the stage out of view to measure the width
       layer.add(tempText);
       tempText.hide();
       layer.draw();
-  
+
       const newWidth = tempText.width();
-  
+
       // Removes the temporary object from the stage
       tempText.destroy();
       layer.draw();
-  
+
       const { element, stateAttrs } = getUpdatedElementAttrs(
         canvasElements,
         selectedElement.id,
         'text',
         newText
       );
-     
+
       stateAttrs.width = Math.min(newWidth);
-  
+
       if (position === "sides") {
         stateAttrs.x = element.state.x - ((newWidth - element.state.width) / 2);
       } else if (position === "right") {
@@ -162,7 +168,7 @@ export default function ToolbarLabel({
       setDefaultText(newText);
     }
   };
-  
+
   const handleColorSelect = (newColor) => {
     if (isSelectedTextElement) {
       const { element, stateAttrs } = getUpdatedElementAttrs(
@@ -170,15 +176,53 @@ export default function ToolbarLabel({
         selectedElement.id,
         'fill',
         newColor.hex
-        );
-        onChange(element, stateAttrs);
-        setDefaultColor(newColor.hex);
-      }
+      );
+      onChange(element, stateAttrs);
+      setDefaultColor(newColor.hex);
+    }
   }
-  
+
   const handleSelectAlign = (e) => {
-    if (selectedElement) {
-      const canvasWidth = Math.floor((selectedMetric === 'in') ? width  * inchesToPixels : width  * centimetersToPixels);  
+    const selectAlign = e.target.value;
+    if (selectedElements?.length > 0) {
+      const canvasWidth = Math.floor(
+        selectedMetric === 'in' ? width * inchesToPixels : width * centimetersToPixels
+      );
+      // Crear un array para almacenar todas las actualizaciones pendientes
+      const updatedElements = selectedElements.map((selectedElement) => {
+        const elementWidth = selectedElement.state.width;
+        let x = selectedElement.state.x;
+
+        switch (selectAlign) {
+          case 'center':
+            x = (canvasWidth / 2) - (elementWidth / 2);
+            break;
+          case 'left':
+            x = canvasWidth * 0.01;
+            break;
+          case 'right':
+            x = canvasWidth - elementWidth - canvasWidth * 0.01;
+            break;
+          default:
+            break;
+        }
+
+        return ({
+          element: selectedElement, stateAttrs: { x }
+        });
+      });
+
+      const readyToPaint = canvasElements.map((element) => {
+        const updatedElement = updatedElements.find((updatedElement) => updatedElement.element.id === element.id);
+        if (updatedElement) {
+          return { ...element, state: { ...element.state, ...updatedElement.stateAttrs } };
+        }
+        return element;
+      });
+      handleCanvasElementsChange(readyToPaint);
+
+    } else if (selectedElement) {
+      const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
       const elementWidth = selectedElement.state.width;
       const selectAlign = e.target.value;
       let x = 0;
@@ -202,9 +246,13 @@ export default function ToolbarLabel({
         'x',
         x
       );
+
       onChange(element, stateAttrs);
+
     }
-  }
+  };
+
+
 
   const handleXChange = (e) => {
     const newX = parseFloat(e.target.value);
@@ -223,6 +271,104 @@ export default function ToolbarLabel({
   const handleSelectPosition = (e) => {
     setPosition(e.target.value);
   }
+
+  const alignElements = (alignment) => {
+    if (selectedElements.length === 0) {
+      return; // No hay elementos seleccionados, no hacemos nada
+    }
+
+    // Encontrar el elemento de referencia (izquierda, derecha o centro)
+    let referenceX;
+    switch (alignment) {
+      case 'left':
+        referenceX = findLeftmostX(canvasElements, selectedElements);
+        break;
+      case 'right':
+        referenceX = findRightmostX(canvasElements, selectedElements);
+        break;
+      case 'center':
+        referenceX = findCenterX(canvasElements, selectedElements);
+        break;
+      default:
+        return; // Alineación no válida
+    }
+
+    // Calcular el desplazamiento necesario para alinear
+    const xOffset = referenceX;
+
+    // Actualizar las posiciones de los elementos seleccionados
+    const updatedElements = selectedElements.map((element) => ({
+      element,
+      stateAttrs: { x: xOffset - (alignment === 'right' ? element.state.width : alignment === "center" ? (element.state.width / 2) : 0) },
+    }));
+
+    // Actualizar canvasElements con las posiciones actualizadas
+    const readyToPaint = canvasElements.map((element) => {
+      const updatedElement = updatedElements.find(
+        (updatedElement) => updatedElement.element.id === element.id
+      );
+      if (updatedElement) {
+        return { ...element, state: { ...element.state, ...updatedElement.stateAttrs } };
+      }
+      return element;
+    });
+
+    handleCanvasElementsChange(readyToPaint);
+  };
+
+  // Funciones auxiliares para encontrar la coordenada X más a la izquierda y más a la derecha
+  const findLeftmostX = (elements, selectedElements) => {
+    const selectedIds = new Set(selectedElements.map((element) => element.id));
+
+    let minX = Infinity;
+
+    elements.forEach((element) => {
+      if (selectedIds.has(element.id) && element.state.x < minX) {
+        minX = element.state.x;
+      }
+    });
+
+    return minX !== Infinity ? minX : 0;
+  };
+
+  const findRightmostX = (elements, selectedElements) => {
+    const selectedIds = new Set(selectedElements.map((element) => element.id));
+
+    let maxX = -Infinity;
+
+    elements.forEach((element) => {
+      if (selectedIds.has(element.id)) {
+        const rightX = element.state.x + element.state.width;
+        if (rightX > maxX) {
+          maxX = rightX;
+        }
+      }
+    });
+
+    return maxX !== -Infinity ? maxX : 0;
+  };
+
+  const findCenterX = (elements, selectedElements) => {
+    const selectedIds = new Set(selectedElements.map((element) => element.id));
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+
+    elements.forEach((element) => {
+      if (selectedIds.has(element.id)) {
+        if (element.state.x < minX) {
+          minX = element.state.x;
+        }
+
+        const rightX = element.state.x + element.state.width;
+        if (rightX > maxX) {
+          maxX = rightX;
+        }
+      }
+    });
+
+    return minX !== Infinity && maxX !== -Infinity ? minX + (maxX - minX) / 2 : 0;
+  };
 
 
   return (
@@ -325,32 +471,32 @@ export default function ToolbarLabel({
                 <div className="flex items-center pl-4">
                   <span className="mr-2">Align:</span>
                   <div className="relative pl-2">
-                      <select 
-                        className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
-                        onChange={(e) => handleSelectAlign(e)}
-                        disabled={!isSelectedElemet}
-                        value={"none"}
-                      >
-                        {
-                          isSelectedElemet 
-                            ? 
-                              <>
-                                <option value="none" disabled hidden>Select Alignment...</option>
-                                <option value="center">Center</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                              </> 
-                            : 
-                              <>
-                                <option value="none">Select a Element...</option>
-                              </>
-                        }
-                      </select>
+                    <select
+                      className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
+                      onChange={(e) => handleSelectAlign(e)}
+                      disabled={!isSelectedElemet && !isSelectedElemets}
+                      value={"none"}
+                    >
+                      {
+                        isSelectedElemet || isSelectedElemets
+                          ?
+                          <>
+                            <option value="none" disabled hidden>Select Alignment...</option>
+                            <option value="center">Center</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                          </>
+                          :
+                          <>
+                            <option value="none">Select a Element...</option>
+                          </>
+                      }
+                    </select>
                   </div>
                 </div>
               </div>
               <div className="flex items-center">
-                {isSelectedTextElement && !!selectedElement.field && 
+                {isSelectedTextElement && !!selectedElement.field &&
                   <div className="md:ml-4 md:flex md:flex-shrink-0 md:items-center">
                     <div
                       className="border p-2 rounded-full bg-white p-1 text-ft-blue-300 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
@@ -418,64 +564,87 @@ export default function ToolbarLabel({
           </div>
         </>
       </Disclosure>
-     
+
       <div className="overflow-hidden bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
-    
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
+
           <div className={`flex w-auto pb-2 ${selectedElement?.type === "text" ? "justify-between" : "justify-center"} pl-4`}>
-              {selectedElement?.type === 'text' && (
-                <div className="pr-4">
-                  <div className="relative pl-2">
-                    <select
-                      className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
-                      onChange={(e) => handleSelectPosition(e)}
-                      disabled={!isSelectedElemet}
-                      value={position}
-                    >
-                      {
-                        isSelectedElemet
-                          ?
-                          <>
-                            <option value="none" disabled hidden>Select Position...</option>
-                            <option value="sides">Sides</option>
-                            <option value="left">Left</option>
-                            <option value="right">Right</option>
-                          </>
-                          :
-                          <>
-                            <option value="none">Select a Element...</option>
-                          </>
-                      }
-                    </select>
-                  </div>
-                </div>
-              )}
-              <div className='flex items-center'>
-                <span className="mr-2">X:</span>
+            {selectedElement?.type === 'text' && (
+              <div className="pr-4">
                 <div className="relative pl-2">
-                  <input
-                    type="number"
-                    step="1"
-                    value={Math.floor(selectedElement?.state.x ) || 0}
-                    onChange={handleXChange}
-                    className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <span className="mr-2">Y:</span>
-                <div className="relative pl-2">
-                  <input
-                    type="number"
-                    step="1"
-                    value={Math.floor(selectedElement?.state.y) || 0}
-                    onChange={handleYChange}
-                    className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
-                  />
+                  <select
+                    className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
+                    onChange={(e) => handleSelectPosition(e)}
+                    disabled={!isSelectedElemet}
+                    value={position}
+                  >
+                    {
+                      isSelectedElemet
+                        ?
+                        <>
+                          <option value="none" disabled hidden>Select Position...</option>
+                          <option value="sides">Sides</option>
+                          <option value="left">Left</option>
+                          <option value="right">Right</option>
+                        </>
+                        :
+                        <>
+                          <option value="none">Select a Element...</option>
+                        </>
+                    }
+                  </select>
                 </div>
               </div>
+            )}
+            <div className='flex items-center'>
+              <span className="mr-2">X:</span>
+              <div className="relative pl-2">
+                <input
+                  type="number"
+                  step="1"
+                  value={Math.floor(selectedElement?.state.x) || 0}
+                  onChange={handleXChange}
+                  className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <span className="mr-2">Y:</span>
+              <div className="relative pl-2">
+                <input
+                  type="number"
+                  step="1"
+                  value={Math.floor(selectedElement?.state.y) || 0}
+                  onChange={handleYChange}
+                  className="block appearance-none w-3/4 bg-white border rounded-md border-gray-300 px-6 py-2 pr-8 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              {
+                selectedElements?.length > 1 && (
+                  <div className="flex justify-start space-x-2">
+                    <button
+                      className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300 `}
+                      onClick={() => alignElements('left')}
+                    >
+                      <img src={LeftAlignmentIcon} alt="Left Alignment" className="w-6 h-6" />
+                    </button>
+                    <button
+                      className={`flex items-center justify-center px-3 py-2 rounded bg-gray-300 `}
+                      onClick={() => alignElements('center')}
+                    >
+                      <img src={CenterAlignmentIcon} alt="Center Alignment" className="w-6 h-6" />
+                    </button>
+                    <button
+                      className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300`}
+                      onClick={() => alignElements('right')}
+                    >
+                      <img src={RightAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
+                    </button>
+                  </div>
+                )}
+            </div>
           </div>
         </div>
       </div>
-   
+
     </div>
   );
 }
