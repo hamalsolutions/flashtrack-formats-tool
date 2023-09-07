@@ -1,5 +1,5 @@
 import { React, Fragment, useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Rect, Line, Text } from 'react-konva';
+import { Stage, Layer, Rect, Line, Text, Transformer } from 'react-konva';
 import ToolbarLabel from './components/toolbar-label';
 import SidePanel from './components/side-panel';
 import { LoadImage } from './components/image-editor';
@@ -31,6 +31,7 @@ const defaultCanvasZoom = 1;
 export default function App() {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
+  const isCtrlPressed = useRef(false);
   const [selectedElement, setSelectedElement] = useState(null);
   const [selectedColor, setSelectedColor] = useState(defaultCanvasColor);
   const [width, setWidth] = useState(defaultCanvasWidth);
@@ -51,6 +52,7 @@ export default function App() {
   const [redoStack, setRedoStack] = useState([]);
   const [fontFamilyList, setFontFamilyList] = useState([]);
   const [align, setAlign] = useState("none");
+  const [position, setPosition] = useState("none");
   // maximum amount of elements to store in the undo stack
   const maxHistoryStackLength = 10;
 
@@ -60,7 +62,8 @@ export default function App() {
   const [guideLines, setGuideLines] = useState({ vertical: null, horizontal: null });
   const [showGuides, setShowGuides] = useState(false);
   const [lineEnds, setLineEnds] = useState({ endX: null, endY: null });
- 
+  const [selectedElements, setSelectedElements] = useState([]);
+
   const handleDragMove = (e) => {
     const shape = e.target;
     const layer = shape.getLayer();
@@ -70,87 +73,111 @@ export default function App() {
     let lineGuideY = null;
     let lineEndX = null;
     let lineEndY = null;
-  
+
     shapes.forEach((guideShape) => {
-        if (guideShape === shape) {
-            return;
-        }
-  
-        // Calculate the center of the dragged image
-        const draggedCenterX = shape.x() + shape.width() / 2;
-        const draggedCenterY = shape.y() + shape.height() / 2;
-  
-        // Calculate the center of the guide image
-        const guideCenterX = guideShape.x() + guideShape.width() / 2;
-        const guideCenterY = guideShape.y() + guideShape.height() / 2;
-  
-        if (Math.abs(draggedCenterX - guideCenterX) < 5 ) {
-            lineGuideX = guideCenterX;
-        }
-  
-        if (Math.abs(draggedCenterY - guideCenterY) < 5) {
-            lineGuideY = guideCenterY;
-        }
+      if (guideShape === shape) {
+        return;
+      }
 
-        // Calculate the ends of the guide image
-        const guideLeftX = guideShape.x();
-        const guideTopY = guideShape.y();
-        const guideRightX = guideShape.x() + guideShape.width();
-        const guideBottomY = guideShape.y() + guideShape.height();
-        
-        const shapeLeftX = shape.x();
-        const shapeTopY = shape.y();
-  
-        if (Math.abs(shapeLeftX - guideRightX) < 5) {
-            lineEndX = guideRightX;
-        }
+      // Calculate the center of the dragged image
+      const draggedCenterX = shape.x() + shape.width() / 2;
+      const draggedCenterY = shape.y() + shape.height() / 2;
 
-        if (Math.abs(shapeTopY - guideBottomY) < 5) {
-            lineEndY = guideBottomY;
-        }
-  
-        if (Math.abs(shape.x() - guideLeftX) < 5) {
-            lineEndX = guideLeftX;
-        }
+      // Calculate the center of the guide image
+      const guideCenterX = guideShape.x() + guideShape.width() / 2;
+      const guideCenterY = guideShape.y() + guideShape.height() / 2;
 
-        if (Math.abs(shape.y() - guideTopY) < 5) {
-            lineEndY = guideTopY;
-        }
+      if (Math.abs(draggedCenterX - guideCenterX) < 5) {
+        lineGuideX = guideCenterX;
+      }
 
-        if (Math.abs(shape.x() + shape.width() - guideRightX) < 5 ) {
-            lineEndX = guideRightX;
-        }
+      if (Math.abs(draggedCenterY - guideCenterY) < 5) {
+        lineGuideY = guideCenterY;
+      }
 
-        if (Math.abs(shape.y() + shape.height() - guideBottomY) < 5) {
-            lineEndY = guideBottomY;
-        }
+      // Calculate the ends of the guide image
+      const guideLeftX = guideShape.x();
+      const guideTopY = guideShape.y();
+      const guideRightX = guideShape.x() + guideShape.width();
+      const guideBottomY = guideShape.y() + guideShape.height();
 
-        if (Math.abs(shape.x() + shape.width() - guideLeftX) < 5) {
-            lineEndX = guideLeftX;
-        }
+      const shapeLeftX = shape.x();
+      const shapeTopY = shape.y();
 
-        if (Math.abs(shape.y() + shape.height() - guideTopY) < 5) {
-            lineEndY = guideTopY; 
-        }
+      if (Math.abs(shapeLeftX - guideRightX) < 5) {
+        lineEndX = guideRightX;
+      }
+
+      if (Math.abs(shapeTopY - guideBottomY) < 5) {
+        lineEndY = guideBottomY;
+      }
+
+      if (Math.abs(shape.x() - guideLeftX) < 5) {
+        lineEndX = guideLeftX;
+      }
+
+      if (Math.abs(shape.y() - guideTopY) < 5) {
+        lineEndY = guideTopY;
+      }
+
+      if (Math.abs(shape.x() + shape.width() - guideRightX) < 5) {
+        lineEndX = guideRightX;
+      }
+
+      if (Math.abs(shape.y() + shape.height() - guideBottomY) < 5) {
+        lineEndY = guideBottomY;
+      }
+
+      if (Math.abs(shape.x() + shape.width() - guideLeftX) < 5) {
+        lineEndX = guideLeftX;
+      }
+
+      if (Math.abs(shape.y() + shape.height() - guideTopY) < 5) {
+        lineEndY = guideTopY;
+      }
     });
 
     setGuideLines({ vertical: lineGuideX, horizontal: lineGuideY });
     setLineEnds({ endX: lineEndX, endY: lineEndY });
-  
+
     shape.position({
-        x: lineGuideX !== null ? lineGuideX - shape.width() / 2 : shape.x(),
-        y: lineGuideY !== null ? lineGuideY - shape.height() / 2 : shape.y(),
+      x: lineGuideX !== null ? lineGuideX - shape.width() / 2 : shape.x(),
+      y: lineGuideY !== null ? lineGuideY - shape.height() / 2 : shape.y(),
     });
-  
+
     stageRef.current.batchDraw();
-};
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && !isCtrlPressed.current) {
+
+        isCtrlPressed.current = true;
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        isCtrlPressed.current = false;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
 
 
   const handleDragEnd = () => {
     setShowGuides(false);
     setGuideLines({ vertical: null, horizontal: null });
   };
-  
+
 
   const applyTemplate = (template) => {
     setWidth(template.design.format.width);
@@ -180,7 +207,7 @@ export default function App() {
   // listens to the key delete to remove the selected element
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Delete' && selectedElement?.type !== 'text' && selectedElement?.type !== 'Checkbox')
+      if (event.key === 'Delete' && selectedElement?.type !== 'Checkbox')
         deleteElementSelected();
     };
 
@@ -189,7 +216,7 @@ export default function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedElement]);
+  }, [selectedElement, selectedElements]);
 
   const handleColorChange = (newColor) => {
     setSelectedColor(newColor);
@@ -291,11 +318,11 @@ export default function App() {
       console.error('Error fontFamily data:', error);
     }
   };
-  
+
   useEffect(() => {
     fetchFontFamily();
   }, []);
-  
+
   const [fontFamily, setFontFamily] = useState(fontFamilyList[0]?.name);
   const [fontSize, setFontSize] = useState(24);
 
@@ -310,7 +337,7 @@ export default function App() {
     setExportName(name);
     setExportReady(true);
   };
-  
+
   useEffect(() => {
     if (exportReady) {
       const isMobile = window.innerWidth <= 768;
@@ -331,7 +358,7 @@ export default function App() {
           quality: 1,
         });
         const isLandscape = stageEx.width() > stageEx.height();
-        const doc = new jsPDF((isLandscape) ? 'l': 'p', 'px', [
+        const doc = new jsPDF((isLandscape) ? 'l' : 'p', 'px', [
           stageEx.width(),
           stageEx.height(),
         ]);
@@ -354,7 +381,7 @@ export default function App() {
         doc.save(`${formatName}.pdf`);
       } else if (exportType === "php") {
         const phpString = generatePHP(canvasElements, {
-          width:  Math.floor((selectedMetric === 'in') ? width  * inchesToPixels : width  * centimetersToPixels),
+          width: Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels),
           height: Math.floor((selectedMetric === 'in') ? height * inchesToPixels : height * centimetersToPixels),
           realWidth: width,
           realHeight: height,
@@ -430,39 +457,70 @@ export default function App() {
     }
   };
 
+
+
+
   // this functions is called when the user wants to delete an element
   // removes the element from the canvasElements array
   const onDelete = (element) => {
-    const newElements = canvasElements.filter(
-      (item) => item.id !== element.id
-    );
+    const elementsToDelete = Array.isArray(element) ? element : [element];
+    const newElements = canvasElements.filter((canvasElement) => !elementsToDelete.some((item) => item.id === canvasElement.id));
     handleCanvasElementsChange(newElements);
   }
+
+
 
   // This function is called when the user clicks on an element
   // sets the selectedElement state to the element that was clicked
   const onSelect = (element) => {
-    setSelectedElement(element);
+    if (isCtrlPressed.current) {
+      setSelectedElements((prevSelected) => {
+        prevSelected = prevSelected || [];
+
+        if (prevSelected.some((selected) => selected.id === element.id)) {
+          return prevSelected.filter((el) => el.id !== element.id);
+        } else {
+          return [...prevSelected, element];
+        }
+      });
+      setSelectedElement(null);
+    } else {
+      setSelectedElement(element);
+      setSelectedElements(null);
+    }
   };
+
+
+
+
 
   // deletes the selected element
   const deleteElementSelected = () => {
-    if (selectedElement) {
+    if (selectedElements) {
+      setSelectedElements(null);
+      onDelete(selectedElements);
+    }
+    else if (selectedElement) {
       setSelectedElement(null);
       onDelete(selectedElement);
     }
   };
-  
+
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
     const { type, draggable, ...rest } = element;
+
+    const isSelected = (selectedElements && selectedElements?.some((selected) => selected.id === element.id)) || selectedElement?.id === element.id;
+
     const commonProps = {
       draggable,
       onDragMove: rest.onDragMove,
-      onDragEnd: rest.onDragEnd,   
-      isSelected: selectedElement && selectedElement.id === element.id,
-      onSelect: () => onSelect(element),
+      onDragEnd: rest.onDragEnd,
+      isSelected: isSelected,
       onChange: (newAttrs) => onChange(element, newAttrs),
+      onSelect: () => {
+        onSelect(element || []);
+      }
     };
 
     if (type === 'text') {
@@ -514,13 +572,13 @@ export default function App() {
     }
     return <></>;
   };
-  
 
   // deselect when clicked on empty area
   const handleDeselectElement = (e) => {
     const clickedOnEmpty = e.target?.attrs?.id === 'background';
     const clickedOnGrayArea = e.target?.id === 'grayArea';
     if (clickedOnEmpty || clickedOnGrayArea) {
+      setSelectedElements(null);
       setSelectedElement(null);
     }
   };
@@ -541,7 +599,7 @@ export default function App() {
       }
     }
   };
-  
+
   const handleRedo = () => {
     if (redoStack.length > 0) {
       const nextElement = redoStack[0];
@@ -561,6 +619,7 @@ export default function App() {
   };
 
   const handleCanvasElementsChange = (newElements, extraParams = null) => {
+
     setCanvasElements(newElements);
     setUndoStack((prevStack) => [...prevStack, {
       window: (extraParams) ? extraParams : { zoom, selectedW, selectedH },
@@ -607,23 +666,23 @@ export default function App() {
     let divisionHeight = 0;
     let positionPivot = 0;
 
-    if (isLargeDivision){ 
+    if (isLargeDivision) {
       divisionHeight = inchHeight + 15;
       positionPivot = 15;
     }
-    else if (isHalfDivision){ 
+    else if (isHalfDivision) {
       divisionHeight = halfHeight + 20;
       positionPivot = 20;
     }
-    else if (isQuarterDivision){ 
+    else if (isQuarterDivision) {
       divisionHeight = quarterHeight + 25;
       positionPivot = 25;
     }
-    else if (isEighthDivision){ 
+    else if (isEighthDivision) {
       divisionHeight = eighthHeight + 30;
       positionPivot = 30;
     }
-    else if (isSixteenthDivision){ 
+    else if (isSixteenthDivision) {
       divisionHeight = sixteenthHeight + 35;
       positionPivot = 35;
     }
@@ -669,7 +728,7 @@ export default function App() {
       );
     }
   }
-  
+
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
@@ -699,19 +758,22 @@ export default function App() {
             fetchFontFamily={fetchFontFamily}
             align={align}
             width={width}
-          
-            format={{ 
-              widthPx: selectedW, 
-              heightPx: selectedH, 
+            position={position}
+            setPosition={setPosition}
+
+            format={{
+              widthPx: selectedW,
+              heightPx: selectedH,
               width: width,
               height: height,
-              metric: selectedMetric, 
-              angle: selectedRotation 
+              metric: selectedMetric,
+              angle: selectedRotation
             }}
           />
         </div>
         <div className="col-span-12 md:col-span-8">
           <ToolbarLabel
+            selectedElements={selectedElements}
             selectedElement={selectedElement}
             deleteElementSelected={deleteElementSelected}
             handleExportClick={handleExportClick}
@@ -726,18 +788,20 @@ export default function App() {
             width={width}
             selectedMetric={selectedMetric}
             currentElementWidth={currentElementWidth}
-            align={align}
             setAlign={setAlign}
+            position={position}
+            setPosition={setPosition}
+            handleCanvasElementsChange={handleCanvasElementsChange}
           />
           {/* A partir de aqui Canvas*/}
-          <div 
-            style={{ 
+          <div
+            style={{
               width: "100%",
               height: "100%",
               position: 'absolute'
             }}
           >
-            <Stage 
+            <Stage
               width={containerWidth}
               height={containerHeight}
             >
@@ -772,13 +836,13 @@ export default function App() {
                 marginTop: '40px',
               }}
             >
-            <Stage
+              <Stage
                 width={selectedW}
                 height={selectedH}
                 onMouseDown={handleDeselectElement}
                 onTouchStart={handleDeselectElement}
                 ref={stageRef}
-                >
+              >
                 <Layer>
                   {/* Fondo */}
                   <Rect
@@ -802,40 +866,40 @@ export default function App() {
 
                   {showGuides && (
                     <>
-                        {guideLines.horizontal  !== null && (
-                          <Line
-                            points={[0, guideLines.horizontal, selectedW, guideLines.horizontal]}
-                            stroke="rgb(0, 161, 255)"
-                            strokeWidth={1}
-                            dash={[4, 6]}
-                          />
-                        )}
-                        {guideLines.vertical !== null && (
-                          <Line
-                            points={[guideLines.vertical, 0, guideLines.vertical, selectedH]}
-                            stroke="rgb(0, 161, 255)"
-                            strokeWidth={1}
-                            dash={[4, 6]}
-                          />
-                        )}
-                        {lineEnds.endX !== null && (
-                          <Line
-                            points={[lineEnds.endX, 0, lineEnds.endX, selectedH]}
-                            stroke="rgb(0, 161, 255)" 
-                            strokeWidth={1}
-                            dash={[4, 6]}
-                          />
-                        )}
-                        {lineEnds.endY !== null && (
-                          <Line
-                            points={[0, lineEnds.endY, selectedW, lineEnds.endY]}
-                            stroke="rgb(0, 161, 255)" 
-                            strokeWidth={1}
-                            dash={[4, 6]}
-                          />
-                        )}
-                      </>
-                    )}
+                      {guideLines.horizontal !== null && (
+                        <Line
+                          points={[0, guideLines.horizontal, selectedW, guideLines.horizontal]}
+                          stroke="rgb(0, 161, 255)"
+                          strokeWidth={1}
+                          dash={[4, 6]}
+                        />
+                      )}
+                      {guideLines.vertical !== null && (
+                        <Line
+                          points={[guideLines.vertical, 0, guideLines.vertical, selectedH]}
+                          stroke="rgb(0, 161, 255)"
+                          strokeWidth={1}
+                          dash={[4, 6]}
+                        />
+                      )}
+                      {lineEnds.endX !== null && (
+                        <Line
+                          points={[lineEnds.endX, 0, lineEnds.endX, selectedH]}
+                          stroke="rgb(0, 161, 255)"
+                          strokeWidth={1}
+                          dash={[4, 6]}
+                        />
+                      )}
+                      {lineEnds.endY !== null && (
+                        <Line
+                          points={[0, lineEnds.endY, selectedW, lineEnds.endY]}
+                          stroke="rgb(0, 161, 255)"
+                          strokeWidth={1}
+                          dash={[4, 6]}
+                        />
+                      )}
+                    </>
+                  )}
                 </Layer>
               </Stage>
 
@@ -854,7 +918,7 @@ export default function App() {
                 <ZoomOutIcon className="h-5 w-5" aria-hidden="true" />
               </button>
               <span className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10">
-                { Math.floor(100 * zoom) }%
+                {Math.floor(100 * zoom)}%
               </span>
               <button
                 type="button"
