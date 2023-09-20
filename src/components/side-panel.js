@@ -42,7 +42,9 @@ export default function SidePanel({
   format,
   fetchFontFamily,
   align,
-  width
+  width,
+  position,
+  setPosition
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -102,6 +104,8 @@ export default function SidePanel({
           align={align}
           selectedMetric={selectedMetric}
           width={width}
+          position ={position}
+          setPosition ={setPosition}
         />
       ),
       icon: PencilIcon,
