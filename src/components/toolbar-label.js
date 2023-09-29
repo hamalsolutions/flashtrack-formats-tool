@@ -481,7 +481,7 @@ export default function ToolbarLabel({
                         isSelectedElemet || isSelectedElemets
                           ?
                           <>
-                            <option value="none" disabled hidden>Select Alignment...</option>
+                            <option value="none" disabled hidden>Select Alignment</option>
                             <option value="center">Center</option>
                             <option value="left">Left</option>
                             <option value="right">Right</option>
@@ -568,8 +568,8 @@ export default function ToolbarLabel({
       <div className="overflow-hidden bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
 
-          <div className={`flex w-auto pb-2 ${selectedElement?.type === "text" ? "justify-between" : "justify-center"} pl-4`}>
-            {selectedElement?.type === 'text' && (
+          <div className={`flex w-auto pb-2 ${ selectedElement?.type === 'text' || selectedElement?.type === 'Checkbox' ? "justify-between" : "justify-center"} pl-4`}>
+            {(selectedElement?.type === 'text' || selectedElement?.type === 'Checkbox' ) && (
               <div className="pr-4">
                 <div className="relative pl-2">
                   <select
@@ -582,7 +582,7 @@ export default function ToolbarLabel({
                       isSelectedElemet
                         ?
                         <>
-                          <option value="none" disabled hidden>Select Position...</option>
+                          <option value="none" disabled hidden>Select Position</option>
                           <option value="sides">Sides</option>
                           <option value="left">Left</option>
                           <option value="right">Right</option>
