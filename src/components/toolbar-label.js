@@ -188,6 +188,7 @@ export default function ToolbarLabel({
       const canvasWidth = Math.floor(
         selectedMetric === 'in' ? width * inchesToPixels : width * centimetersToPixels
       );
+
       // Crear un array para almacenar todas las actualizaciones pendientes
       const updatedElements = selectedElements.map((selectedElement) => {
         const elementWidth = selectedElement.state.width;
@@ -225,6 +226,7 @@ export default function ToolbarLabel({
       const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
       const elementWidth = selectedElement.state.width;
       const selectAlign = e.target.value;
+  
       let x = 0;
       switch (selectAlign) {
         case "center":
