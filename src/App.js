@@ -7,8 +7,13 @@ import { LoadText } from './components/text-editor';
 import { LoadField } from './components/fields-editor';
 import { inchesToPixels, centimetersToPixels } from './components/sizelabel-editor';
 import jsPDF from 'jspdf';
-import { ZoomOutIcon, ZoomInIcon } from '@heroicons/react/outline';
+import { ZoomOutIcon, ZoomInIcon, RefreshIcon } from '@heroicons/react/outline';
 import { generatePHP } from './tools/generator';
+import {
+  TransformWrapper,
+  TransformComponent,
+  useControls
+} from "react-zoom-pan-pinch";
 
 const captureCanvas = (stageRef) => {
   const canvas = stageRef.current.toCanvas();
@@ -244,64 +249,6 @@ export default function App() {
 
   const handleChangeRotation = (newRotation) => {
     setSelectedRotation(newRotation);
-  }
-
-  // zooms in the canvas and all elements in it
-  const handleZoomUp = () => {
-    if (zoom < 2) {
-      setZoom(zoom + 0.1);
-      setSelectedW(selectedW * 1.1);
-      setSelectedH(selectedH * 1.1);
-      const newElements = canvasElements.map((element) => {
-        const fontAttrs = element.type === 'text' ? { fontSize: element.state.fontSize * 1.1 } : {};
-        return {
-          ...element,
-          state: {
-            ...element.state,
-            x: element.state.x * 1.1,
-            y: element.state.y * 1.1,
-            width: element.state.width * 1.1,
-            height: element.state.height * 1.1,
-            ...fontAttrs,
-          },
-        };
-      }
-      );
-      handleCanvasElementsChange(newElements, {
-        selectedW: selectedW * 1.1,
-        selectedH: selectedH * 1.1,
-        zoom: zoom + 0.1,
-      });
-    }
-  }
-
-  // zooms out the canvas and all elements in it
-  const handleZoomDown = () => {
-    if (zoom > 1) {
-      setZoom(zoom - 0.1);
-      setSelectedW(selectedW * 0.9);
-      setSelectedH(selectedH * 0.9);
-      const newElements = canvasElements.map((element) => {
-        const fontAttrs = element.type === 'text' ? { fontSize: element.state.fontSize * 0.9 } : {};
-        return {
-          ...element,
-          state: {
-            ...element.state,
-            x: element.state.x * 0.9,
-            y: element.state.y * 0.9,
-            width: element.state.width * 0.9,
-            height: element.state.height * 0.9,
-            ...fontAttrs,
-          },
-        };
-      }
-      );
-      handleCanvasElementsChange(newElements, {
-        selectedW: selectedW * 0.9,
-        selectedH: selectedH * 0.9,
-        zoom: zoom - 0.1
-      });
-    }
   }
 
   const fetchFontFamily = async () => {
@@ -729,6 +676,22 @@ export default function App() {
     }
   }
 
+  const Controls = () => {
+    const { zoomIn, zoomOut, resetTransform } = useControls();
+    return (
+      <div  style={{
+        position: 'absolute',
+        left: '70%',
+        bottom: '5%',
+        transform: 'translateX(-50%)'
+      }}>
+        <button className="relative inline-flex items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10" onClick={() => zoomOut()}> <ZoomOutIcon className="h-5 w-5" aria-hidden="true" /></button>
+        <button className="relative inline-flex items-center bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10" onClick={() => resetTransform()}> <RefreshIcon className="h-5 w-5" aria-hidden="true" /></button>
+        <button className="relative -ml-px inline-flex items-center rounded-r-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10" onClick={() => zoomIn()}><ZoomInIcon className="h-5 w-5" aria-hidden="true" /></button>
+      </div>
+    );
+  };
+
   return (
     <div className="mx-auto p-0 lg:px-1 mt-1">
       <div className="grid grid-cols-12">
@@ -794,11 +757,18 @@ export default function App() {
             handleCanvasElementsChange={handleCanvasElementsChange}
           />
           {/* A partir de aqui Canvas*/}
+          <TransformWrapper
+            panning={{ activationKeys: ["Shift"] }}
+            wheel={{ activationKeys: ["Shift"] }}
+          >
+          <TransformComponent
+          >
           <div
             style={{
               width: "100%",
               height: "100%",
-              position: 'absolute'
+              position: 'absolute',
+              overflowY: 'auto'
             }}
           >
             <Stage
@@ -817,10 +787,9 @@ export default function App() {
           </div>
           <div
             style={{
-              width: '100%',
+              width: '135vh',
               height: '80vh',
-              backgroundColor: '#CDCBCB',
-              overflow: 'auto',
+              backgroundColor: '#CDCBCB'
             }}
             onMouseDown={handleDeselectElement}
             onTouchStart={handleDeselectElement}
@@ -902,33 +871,12 @@ export default function App() {
                   )}
                 </Layer>
               </Stage>
-
-
-
+      
             </div>
           </div>
-          {/* A partir de aqui Zoom*/}
-          <div className="flex justify-center z-10 -mt-20 md:-mt-11">
-            <span className="isolate inline-flex rounded-md shadow-sm">
-              <button
-                type="button"
-                onClick={handleZoomDown}
-                className="relative inline-flex items-center rounded-l-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10"
-              >
-                <ZoomOutIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-              <span className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10">
-                {Math.floor(100 * zoom)}%
-              </span>
-              <button
-                type="button"
-                onClick={handleZoomUp}
-                className="relative -ml-px inline-flex items-center rounded-r-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-300 focus:z-10"
-              >
-                <ZoomInIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </span>
-          </div>
+            </TransformComponent>
+            <Controls />
+          </TransformWrapper>
         </div>
       </div>
     </div>
