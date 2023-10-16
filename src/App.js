@@ -370,7 +370,7 @@ export default function App() {
       setExportName(null);
     }
   }, [exportReady]);
-
+  
   // refreshes the selected element when the canvas elements change
   useEffect(() => {
     if (selectedElement) {
@@ -379,7 +379,16 @@ export default function App() {
       );
       setSelectedElement(element);
     }
-  }, [selectedElement, canvasElements]);
+    if (selectedElements) {
+      const elements = selectedElements.map((selected) => {
+        const element = canvasElements.find(
+          (element) => element.id === selected.id
+        );
+        return element;
+      });
+      setSelectedElements(elements);
+    }
+  }, [ selectedElement, canvasElements]);
 
   // This function is called when the user changes an element
   // updates the attributes of the element or any other element attributes
@@ -749,6 +758,7 @@ export default function App() {
             onChange={onChange}
             fontFamilyList={fontFamilyList}
             width={width}
+            height={height}
             selectedMetric={selectedMetric}
             currentElementWidth={currentElementWidth}
             setAlign={setAlign}
@@ -788,7 +798,7 @@ export default function App() {
           <div
             style={{
               width: '135vh',
-              height: '80vh',
+              height: '100vh',
               backgroundColor: '#CDCBCB'
             }}
             onMouseDown={handleDeselectElement}
