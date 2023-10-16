@@ -198,7 +198,6 @@ export default function ToolbarLabel({
         const elementWidth = selectedElement.state.width;
         const elementHeight = selectedElement.state.height;
         let x = selectedElement.state.x;
-        console.log("primero", x);
         let y = selectedElement.state.y;
 
         switch (selectAlign) {
@@ -274,7 +273,7 @@ export default function ToolbarLabel({
         x ? 'x' : 'y',
         x ? x : y
       );
-      console.log(stateAttrs);
+      
       onChange(element, stateAttrs);
 
     }
