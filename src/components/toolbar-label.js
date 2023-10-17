@@ -12,6 +12,9 @@ import { inchesToPixels, centimetersToPixels } from './sizelabel-editor';
 import LeftAlignmentIcon from '../svg/align-left.svg';
 import CenterAlignmentIcon from '../svg/align-center.svg';
 import RightAlignmentIcon from '../svg/align-right.svg';
+import MiddleAlignmentIcon from '../svg/align-middle.svg';
+import TopAlignmentIcon from '../svg/align-top.svg';
+import BottomAlignmentIcon from '../svg/align-bottom.svg';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -42,6 +45,7 @@ export default function ToolbarLabel({
   canvasElements,
   fontFamilyList,
   width,
+  height,
   selectedMetric,
   setAlign,
   position,
@@ -183,16 +187,18 @@ export default function ToolbarLabel({
   }
 
   const handleSelectAlign = (e) => {
-    const selectAlign = e.target.value;
-    if (selectedElements?.length > 0) {
-      const canvasWidth = Math.floor(
-        selectedMetric === 'in' ? width * inchesToPixels : width * centimetersToPixels
-      );
+    const selectAlign = e.target.value; 
+    const canvasWidth = Math.floor(selectedMetric === 'in' ? width * inchesToPixels : width * centimetersToPixels);
+    const canvasHeight = Math.floor(selectedMetric === 'in' ? height * inchesToPixels : height * centimetersToPixels);
+    
 
-      // Crear un array para almacenar todas las actualizaciones pendientes
+    if (selectedElements?.length > 0) {
+
       const updatedElements = selectedElements.map((selectedElement) => {
         const elementWidth = selectedElement.state.width;
+        const elementHeight = selectedElement.state.height;
         let x = selectedElement.state.x;
+        let y = selectedElement.state.y;
 
         switch (selectAlign) {
           case 'center':
@@ -204,16 +210,26 @@ export default function ToolbarLabel({
           case 'right':
             x = canvasWidth - elementWidth - canvasWidth * 0.01;
             break;
+          case 'top':
+            y = 0; // Alineación en la parte superior
+            break;
+          case 'middle':
+            y = (canvasHeight / 2) - (elementHeight / 2); // Alineación en el medio vertical
+            break;
+          case 'bottom':
+            y = canvasHeight - elementHeight; // Alineación en la parte inferior
+            break;
           default:
             break;
         }
-
+    
         return ({
-          element: selectedElement, stateAttrs: { x }
+          element: selectedElement, stateAttrs: { x , y }
         });
       });
 
       const readyToPaint = canvasElements.map((element) => {
+        
         const updatedElement = updatedElements.find((updatedElement) => updatedElement.element.id === element.id);
         if (updatedElement) {
           return { ...element, state: { ...element.state, ...updatedElement.stateAttrs } };
@@ -223,11 +239,11 @@ export default function ToolbarLabel({
       handleCanvasElementsChange(readyToPaint);
 
     } else if (selectedElement) {
-      const canvasWidth = Math.floor((selectedMetric === 'in') ? width * inchesToPixels : width * centimetersToPixels);
       const elementWidth = selectedElement.state.width;
-      const selectAlign = e.target.value;
-  
+      const elementHeight = selectedElement.state.height;
       let x = 0;
+      let y = 0;
+
       switch (selectAlign) {
         case "center":
           x = (canvasWidth / 2) - (elementWidth / 2);
@@ -238,6 +254,15 @@ export default function ToolbarLabel({
         case "right":
           x = (canvasWidth - elementWidth) - (canvasWidth * 0.01);
           break;
+        case "top":
+          y = 0; // Alineación en la parte superior
+          break;
+        case "middle":
+          y = (canvasHeight / 2) - (elementHeight / 2); // Alineación en el medio vertical
+          break;
+        case "bottom":
+          y = canvasHeight - elementHeight; // Alineación en la parte inferior
+          break;
         default:
           break;
       }
@@ -245,16 +270,14 @@ export default function ToolbarLabel({
       const { element, stateAttrs } = getUpdatedElementAttrs(
         canvasElements,
         selectedElement.id,
-        'x',
-        x
+        x ? 'x' : 'y',
+        x ? x : y
       );
-
+      
       onChange(element, stateAttrs);
 
     }
   };
-
-
 
   const handleXChange = (e) => {
     const newX = parseFloat(e.target.value);
@@ -281,6 +304,7 @@ export default function ToolbarLabel({
 
     // Encontrar el elemento de referencia (izquierda, derecha o centro)
     let referenceX;
+    let referenceY;
     switch (alignment) {
       case 'left':
         referenceX = findLeftmostX(canvasElements, selectedElements);
@@ -291,18 +315,40 @@ export default function ToolbarLabel({
       case 'center':
         referenceX = findCenterX(canvasElements, selectedElements);
         break;
+      case 'top':
+        referenceY  = findTopmostY(canvasElements, selectedElements);
+        break;
+      case 'bottom':
+        referenceY  = findBottommostY(canvasElements, selectedElements);
+        break;
+      case 'middle':
+        referenceY  = findMiddleY(canvasElements, selectedElements);
+        break;
       default:
         return; // Alineación no válida
     }
 
     // Calcular el desplazamiento necesario para alinear
     const xOffset = referenceX;
-
+    const yOffset = referenceY;
+  
     // Actualizar las posiciones de los elementos seleccionados
-    const updatedElements = selectedElements.map((element) => ({
-      element,
-      stateAttrs: { x: xOffset - (alignment === 'right' ? element.state.width : alignment === "center" ? (element.state.width / 2) : 0) },
-    }));
+    const updatedElements = selectedElements.map((element) => {
+      const stateAttrs = {};
+    
+      if (xOffset) {
+        stateAttrs.x = xOffset - (alignment === 'right' ? element.state.width : alignment === 'center' ? (element.state.width / 2) : 0);
+      }
+    
+      if (yOffset) {
+        stateAttrs.y = yOffset - (alignment === 'bottom' ? element.state.height : alignment === 'middle' ? (element.state.height / 2) : 0);
+      }
+    
+      return {
+        element,
+        stateAttrs,
+      };
+    });
 
     // Actualizar canvasElements con las posiciones actualizadas
     const readyToPaint = canvasElements.map((element) => {
@@ -372,6 +418,59 @@ export default function ToolbarLabel({
     return minX !== Infinity && maxX !== -Infinity ? minX + (maxX - minX) / 2 : 0;
   };
 
+
+  const findTopmostY = (elements, selectedElements) => {
+    const selectedIds = new Set(selectedElements.map((element) => element.id));
+  
+    let minY = Infinity;
+  
+    elements.forEach((element) => {
+      if (selectedIds.has(element.id) && element.state.y < minY) {
+        minY = element.state.y;
+      }
+    });
+  
+    return minY !== Infinity ? minY : 0;
+  };
+
+  const findBottommostY = (elements, selectedElements) => {
+    const selectedIds = new Set(selectedElements.map((element) => element.id));
+  
+    let maxY = -Infinity;
+  
+    elements.forEach((element) => {
+      if (selectedIds.has(element.id)) {
+        const bottomY = element.state.y + element.state.height;
+        if (bottomY > maxY) {
+          maxY = bottomY;
+        }
+      }
+    });
+  
+    return maxY !== -Infinity ? maxY : 0;
+  };
+  
+  const findMiddleY = (elements, selectedElements) => {
+    const selectedIds = new Set(selectedElements.map((element) => element.id));
+  
+    let minY = Infinity;
+    let maxY = -Infinity;
+  
+    elements.forEach((element) => {
+      if (selectedIds.has(element.id)) {
+        if (element.state.y < minY) {
+          minY = element.state.y;
+        }
+  
+        const bottomY = element.state.y + element.state.height;
+        if (bottomY > maxY) {
+          maxY = bottomY;
+        }
+      }
+    });
+  
+    return minY !== Infinity && maxY !== -Infinity ? minY + (maxY - minY) / 2 : 0;
+  };
 
   return (
     <div>
@@ -473,26 +572,29 @@ export default function ToolbarLabel({
                 <div className="flex items-center pl-4">
                   <span className="mr-2">Align:</span>
                   <div className="relative pl-2">
-                    <select
+                  <select
                       className="block appearance-none w-40 bg-white border rounded-md px-6 py-2 pr-8 focus:outline-none focus:border-blue-500 border-gray-300"
                       onChange={(e) => handleSelectAlign(e)}
                       disabled={!isSelectedElemet && !isSelectedElemets}
                       value={"none"}
                     >
-                      {
-                        isSelectedElemet || isSelectedElemets
-                          ?
-                          <>
+                      {isSelectedElemet || isSelectedElemets ? (
+                        <>
+                          <optgroup label="Horizontal Alignment">
                             <option value="none" disabled hidden>Select Alignment</option>
                             <option value="center">Center</option>
                             <option value="left">Left</option>
                             <option value="right">Right</option>
-                          </>
-                          :
-                          <>
-                            <option value="none">Select a Element...</option>
-                          </>
-                      }
+                          </optgroup>
+                          <optgroup label="Vertical Alignment">
+                            <option value="top">Top</option>
+                            <option value="middle">Middle</option>
+                            <option value="bottom">Bottom</option>
+                          </optgroup>
+                        </>
+                      ) : (
+                        <option value="none">Select an Element...</option>
+                      )}
                     </select>
                   </div>
                 </div>
@@ -639,6 +741,24 @@ export default function ToolbarLabel({
                       onClick={() => alignElements('right')}
                     >
                       <img src={RightAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
+                    </button>
+                    <button
+                      className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300`}
+                      onClick={() => alignElements('top')}
+                    >
+                      <img src={TopAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
+                    </button>
+                    <button
+                      className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300`}
+                      onClick={() => alignElements('middle')}
+                    >
+                      <img src={MiddleAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
+                    </button>
+                    <button
+                      className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300`}
+                      onClick={() => alignElements('bottom')}
+                    >
+                      <img src={BottomAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
                     </button>
                   </div>
                 )}
