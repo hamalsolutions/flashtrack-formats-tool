@@ -106,9 +106,11 @@ export function FontFamilyMenu({ fontList, fontFamily, handleFontFamilyChange })
 // size menu component
 export function SizeMenu({ fontSizeList, fontSize, handleTextSizeSelect }) {
   const [selected, setSelected] = useState({ value: fontSize });
+  const [manualFontSize, setManualFontSize] = useState(fontSize);
 
   useEffect(() => {
     setSelected({ value: fontSize });
+    setManualFontSize(fontSize);
   }, [fontSize]);
 
   const handleTextSize = (size) => {
@@ -116,64 +118,90 @@ export function SizeMenu({ fontSizeList, fontSize, handleTextSizeSelect }) {
     handleTextSizeSelect(size.value);
   }
 
+  const handleManualSizeChange = (event) => {
+    const newSize = parseInt(event.target.value);
+    setManualFontSize(newSize);
+  }
+
+  const applyManualSize = () => {
+    setSelected({ value: manualFontSize });
+    handleTextSizeSelect(manualFontSize);
+  }
+
   return (
-    <Listbox value={selected} onChange={handleTextSize}>
-      {({ open }) => (
-        <div className='w-full'>
-          {/* <Listbox.Label className="block text-sm font-medium leading-6 text-gray-900">Assigned to</Listbox.Label> */}
-          <div className="relative mt-2">
-            <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-              <span className="block truncate">{selected.value}</span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </span>
-            </Listbox.Button>
+    <div className="flex items-center space-x-4">
+      <Listbox value={selected} onChange={handleTextSize}>
+        {({ open }) => (
+          <div className='w-24'>
+            <div className="relative">
+              <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                <span className="block truncate">{selected.value}</span>
+                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </span>
+              </Listbox.Button>
 
-            <Transition
-              show={open}
-              as={Fragment}
-              leave="transition ease-in duration-100"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {fontSizeList.map((size, index) => (
-                  <Listbox.Option
-                    key={index}
-                    className={({ active }) =>
-                      classNames(
-                        active ? 'bg-indigo-600 text-white' : 'text-gray-900',
-                        'relative cursor-default select-none py-2 pl-3 pr-9'
-                      )
-                    }
-                    value={size}
-                  >
-                    {({ selected, active }) => (
-                      <>
-                        <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
-                          {size.value}
-                        </span>
-
-                        {selected ? (
-                          <span
-                            className={classNames(
-                              active ? 'text-white' : 'text-indigo-600',
-                              'absolute inset-y-0 right-0 flex items-center pr-4'
-                            )}
-                          >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
+              <Transition
+                show={open}
+                as={Transition.Fragment}
+                leave="transition ease-in duration-100"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  {fontSizeList.map((size, index) => (
+                    <Listbox.Option
+                      key={index}
+                      className={({ active }) =>
+                        classNames(
+                          active ? 'bg-indigo-600 text-white' : 'text-gray-900',
+                          'relative cursor-default select-none py-2 pl-3 pr-9'
+                        )
+                      }
+                      value={size}
+                    >
+                      {({ selected, active }) => (
+                        <>
+                          <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
+                            {size.value}
                           </span>
-                        ) : null}
-                      </>
-                    )}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </Transition>
+                          {selected ? (
+                            <span
+                              className={classNames(
+                                active ? 'text-white' : 'text-indigo-600',
+                                'absolute inset-y-0 right-0 flex items-center pr-4'
+                              )}
+                            >
+                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </Transition>
+            </div>
           </div>
-        </div>
-      )}
-    </Listbox>
+        )}
+      </Listbox>
+      <div className="flex items-center space-x-2 w-20">
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={manualFontSize}
+          onChange={handleManualSizeChange}
+          className="w-20 py-1 px-2 border border-gray-300 rounded"
+        />
+        <button
+          onClick={applyManualSize}
+          className="bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold py-1 px-2 ml-3"
+        >
+          Apply
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -597,7 +625,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
       )}
       <div>
         <div className="mt-4">
-          <div className="mb-4 w-24">
+          <div className="mb-4">
             <p>Font size: </p>
             <SizeMenu 
               fontSizeList={FONT_SIZE_LIST}
