@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Disclosure } from '@headlessui/react';
-import { FONT_SIZE_LIST, SizeMenu, FontFamilyMenu } from './text-editor';
-import { SketchPicker } from "react-color";
 import Konva from 'konva';
 import {
   TrashIcon,
@@ -86,34 +84,6 @@ export default function ToolbarLabel({
     }
   }, [isSelectedTextElement]);
 
-  const handleTextSizeSelect = (fontSize) => {
-    if (isSelectedTextElement) {
-      const { element, stateAttrs } = getUpdatedElementAttrs(
-        canvasElements,
-        selectedElement.id,
-        'fontSize',
-        fontSize
-      );
-      onChange(element, stateAttrs);
-      setDefaultFontSize(fontSize);
-    }
-  }
-
-
-  const handleFontFamilySelect = (fontFamily) => {
-    if (isSelectedTextElement) {
-      const fontFile = allFonts.find(font => font.value === fontFamily)?.file;
-      const { element, stateAttrs } = getUpdatedElementAttrs(
-        canvasElements,
-        selectedElement.id,
-        ["fontFamily", "fontFile"],
-        [fontFamily, fontFile]
-      );
-      onChange(element, stateAttrs);
-      setDefaultFontFamily(fontFamily);
-    }
-  }
-
   useEffect(() => {
     // Create a new instance of Konva.Layer when the component is mounted
     const newLayer = new Konva.Layer();
@@ -128,63 +98,6 @@ export default function ToolbarLabel({
       newLayer.remove();
     };
   }, []);
-
-
-  const handleTextSelect = (event) => {
-    if (isSelectedTextElement) {
-      const newText = event.target.value;
-      const fontSize = isSelectedTextElement ? selectedElement.state.fontSize : defaultFontSize;
-      const fontFamily = isSelectedTextElement ? selectedElement.state.fontFamily : defaultFontFamily;
-
-      const tempText = new Konva.Text({
-        text: newText,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
-      });
-
-      // Add the temporary object to the stage out of view to measure the width
-      layer.add(tempText);
-      tempText.hide();
-      layer.draw();
-
-      const newWidth = tempText.width();
-
-      // Removes the temporary object from the stage
-      tempText.destroy();
-      layer.draw();
-
-      const { element, stateAttrs } = getUpdatedElementAttrs(
-        canvasElements,
-        selectedElement.id,
-        'text',
-        newText
-      );
-
-      stateAttrs.width = Math.min(newWidth);
-
-      if (position === "sides") {
-        stateAttrs.x = element.state.x - ((newWidth - element.state.width) / 2);
-      } else if (position === "right") {
-        stateAttrs.x = element.state.x - (newWidth - element.state.width);
-      }
-
-      onChange(element, stateAttrs);
-      setDefaultText(newText);
-    }
-  };
-
-  const handleColorSelect = (newColor) => {
-    if (isSelectedTextElement) {
-      const { element, stateAttrs } = getUpdatedElementAttrs(
-        canvasElements,
-        selectedElement.id,
-        'fill',
-        newColor.hex
-      );
-      onChange(element, stateAttrs);
-      setDefaultColor(newColor.hex);
-    }
-  }
 
   const handleSelectAlign = (e) => {
     const selectAlign = e.target.value; 
@@ -479,90 +392,39 @@ export default function ToolbarLabel({
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 justify-between">
               <div className="flex">
-                {!isSelectedTextElement ? (
-                  <div className={`transition-all duration-200 ${fade ? "opacity-0" : "opacity-100"} md:ml-6 md:flex md:items-center md:space-x-4`}>
-                    <div className="flex flex-shrink-0 items-center">
-                      <button
-                        type="button"
-                        onClick={handleUndo}
-                        className={classNames(
-                          (undoStackLength === 0 || !undoStackLength) ? "opacity-50 text-black" : "hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800",
-                          "rounded-full bg-white p-1 text-black"
-                        )}
-                        disabled={undoStackLength === 0 || !undoStackLength}
-                      >
-                        <span className="sr-only">Undo</span>
-                        <ArrowNarrowLeftIcon
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRedo}
-                        className={classNames(
-                          (redoStackLength === 0 || !redoStackLength) ? "opacity-50 text-black" : "hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800",
-                          "rounded-full bg-white p-1 text-black"
-                        )}
-                        disabled={redoStackLength === 0 || !redoStackLength}
-                      >
-                        <span className="sr-only">Redo</span>
-                        <ArrowNarrowRightIcon
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-
-                    <input
-                      type="text"
-                      name="label-name"
-                      id="label-name"
-                      className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
-                      defaultValue={formatName}
-                      onChange={(e) => setFormatName(e.target.value)}
-                    />
-                  </div>
-                ) : (
-                  <div className={`flex transition-all duration-200 ${fade ? "opacity-100" : "opacity-0"}`}>
-                    <div className="flex items-center md:space-x-4">
-                      Edit:
-                    </div>
-
-                    <div className="md:ml-4 flex items-center md:space-x-4">
-                      <textarea
-                        rows={1}
-                        name="edit-text-input"
-                        id="edit-text-input"
-                        className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md ml-2"
-                        onChange={handleTextSelect}
-                        value={isSelectedTextElement ? selectedElement.state.text : defaultText}
+              <div className="flex flex-shrink-0 items-center">
+                    <button
+                      type="button"
+                      onClick={handleUndo}
+                      className={classNames(
+                        (undoStackLength === 0 || !undoStackLength) ? "opacity-50 text-black" : "hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800",
+                        "rounded-full bg-white p-1 text-black"
+                      )}
+                      disabled={undoStackLength === 0 || !undoStackLength}
+                    >
+                      <span className="sr-only">Undo</span>
+                      <ArrowNarrowLeftIcon
+                        className="h-5 w-5"
+                        aria-hidden="true"
                       />
-                    </div>
-                    <div className="sm:w-32 md:w-40 py-2 md:px-2 border-gray-300 rounded-md md:ml-2">
-                      <FontFamilyMenu
-                        fontList={allFonts}
-                        fontFamily={isSelectedTextElement ? selectedElement.state.fontFamily : defaultFontFamily}
-                        handleFontFamilyChange={handleFontFamilySelect}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRedo}
+                      className={classNames(
+                        (redoStackLength === 0 || !redoStackLength) ? "opacity-50 text-black" : "hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800",
+                        "rounded-full bg-white p-1 text-black"
+                      )}
+                      disabled={redoStackLength === 0 || !redoStackLength}
+                    >
+                      <span className="sr-only">Redo</span>
+                      <ArrowNarrowRightIcon
+                        className="h-5 w-5"
+                        aria-hidden="true"
                       />
-                    </div>
-
-                    <div className="md:ml-4 flex items-center md:space-x-4">
-                      <div className='flex'>
-                        <div className="p-1 bg-white border shadow-black inline-block cursor-pointer" onClick={() => setShowColorPicker(!showColorPicker)}>
-                          <div className="w-9 h-3.5 rounded-sm" style={{ background: defaultColor }} />
-                        </div>
-                        {showColorPicker ? (
-                          <div className="absolute z-10 mt-4">
-                            <div className="fixed top-0 left-0 right-0 bottom-0" onClick={() => setShowColorPicker(false)} />
-                            <SketchPicker color={defaultColor} onChange={handleColorSelect} />
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
+                    </button>
                   </div>
-                )}
-                <div className="flex items-center pl-4">
+              <div className="flex items-center pl-4">
                   <span className="mr-2">Align:</span>
                   <div className="relative pl-2">
                   <select
@@ -590,6 +452,16 @@ export default function ToolbarLabel({
                       )}
                     </select>
                   </div>
+                </div>
+                <div className={`transition-all duration-200 ${fade ? "opacity-0" : "opacity-100"} md:ml-6 md:flex md:items-center md:space-x-4`}>
+                  <input
+                    type="text"
+                    name="label-name"
+                    id="label-name"
+                    className="max-w-lg block w-full shadow-sm py-2 px-2 sm:max-w-xs sm:text-sm border-gray-300 rounded-md"
+                    defaultValue={formatName}
+                    onChange={(e) => setFormatName(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="flex items-center">
