@@ -539,13 +539,6 @@ export default function ToolbarLabel({
                         value={isSelectedTextElement ? selectedElement.state.text : defaultText}
                       />
                     </div>
-                    <div className="w-24 py-2 px-2 border-gray-300 rounded-md md:ml-2">
-                      <SizeMenu
-                        fontSizeList={FONT_SIZE_LIST}
-                        fontSize={isSelectedTextElement ? selectedElement.state.fontSize : defaultFontSize}
-                        handleTextSizeSelect={handleTextSizeSelect}
-                      />
-                    </div>
                     <div className="sm:w-32 md:w-40 py-2 md:px-2 border-gray-300 rounded-md md:ml-2">
                       <FontFamilyMenu
                         fontList={allFonts}
