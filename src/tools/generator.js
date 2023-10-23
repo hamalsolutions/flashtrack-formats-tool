@@ -159,7 +159,7 @@ const generatePHP = (elements, format) => {
     `;
     stringPHP += stringFormato;
 
-    const textsElements = elements.filter((element) => element.type === "text" && element.field !== "QTY");
+    const textsElements = elements.filter((element) => (element.type === "text" || element.type === "Checkbox") && element.field !== "QTY");
     // colors to use
     const colors = textsElements.map((element) => ({
         id: element.id,
@@ -184,6 +184,7 @@ const generatePHP = (elements, format) => {
         font: element.state.fontFamily,
         file: element.state.fontFile
     }));
+
     const fontFiles = fonts.map((element, index) => ({
         id: element.id,
         index: index,

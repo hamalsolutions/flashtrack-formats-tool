@@ -409,7 +409,7 @@ export default function TextEditor ({fontFamily, setFontFamily, fontFamilyList, 
   }
 
   const handleFontFamilyChange = (fontFamily) => {
-    const fontFile = fontFamilyList.find((font) => font.name === fontFamily)?.path;
+    const fontFile = fontFamilyList.find((font) => font.name === fontFamily)?.namePath;
     if (isSelectedElement) {
       updateSelectedElement(selectedElement.id, ["fontFamily", "fontFile"], [fontFamily, fontFile]);
     } else {
