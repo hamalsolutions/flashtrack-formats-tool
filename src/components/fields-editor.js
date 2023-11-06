@@ -220,7 +220,6 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
     const stateAttrs = Array.isArray(property) > 0 
       ? property.reduce((acc, curr, index) => {
           acc[curr] = value[index];
-          console.log(acc);
           return acc;
         }, {}) 
       : { [property]: value };
