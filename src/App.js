@@ -506,6 +506,7 @@ export default function App() {
           fontFamily={element.state.fontFamily}
           fontSize={element.state.fontSize}
           fill={element.state.fill}
+          align={element.state.align}
           setCurrentElementWidth={setCurrentElementWidth}
           position={position}
           {...commonProps}

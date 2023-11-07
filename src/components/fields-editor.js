@@ -20,6 +20,7 @@ export const LoadField = ({
     fontFamily,
     fontSize,
     fill,
+    align,
     setCurrentElementWidth,
     onDragMove,
     onDragEnd,
@@ -58,6 +59,7 @@ export const LoadField = ({
               fontFamily={fontFamily}
               fontSize={fontSize}
               fill={fill}
+              align={align}
               width={width}
               height={height}
               draggable={draggable}
@@ -224,56 +226,16 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
     onChange(element, stateAttrs);
   }
 
-  useEffect(() => {
-    const newLayer = new Konva.Layer();
-    setLayer(newLayer);
-    newLayer.add(new Konva.Text()); 
-  
-    return () => {
-      newLayer.remove();
-    };
-  }, []);
-
   const handleEditSubmit = (field) => {
-    const newText = editFieldRef.current.value;
-    let x;
-    const fontSize = isSelectedElement ? selectedElement.state.fontSize : defaultFontSize;
-    const fontFamily = isSelectedElement ? selectedElement.state.fontFamily : fontFamily;
-    
-    const tempText = new Konva.Text({
-      text: newText,
-      fontSize: fontSize,
-      fontFamily: fontFamily,
-    });
-
-    layer.add(tempText);
-    tempText.hide();
-    layer.draw();
-
-    const newWidth = tempText.width();
-      
-    const widthFinal = Math.min(newWidth);
-
-    if (alignment === "center") {
-      x = selectedElement.state.x - ((newWidth - selectedElement.state.width) / 2);
-     } else if (alignment === "right") {
-      x = selectedElement.state.x - (newWidth - selectedElement.state.width);
-     }
-     
-    if (x) {
-      updateSelectedElement(selectedElement.id, ["text", "width", "x"], [newText, widthFinal, x]);
-    } else {
-      updateSelectedElement(selectedElement.id, ["text", "width"], [newText, widthFinal]);
+    if (selectedElement?.field === field) {
+      const newText = editFieldRef.current.value;
+      updateSelectedElement(selectedElement.id, ["text"], [newText]);
+      setEditedFields((prevEditedFields) => ({
+        ...prevEditedFields,
+        [field]: newText,
+      }));
+      setEditField(newText);
     }
-
-    setEditedFields((prevEditedFields) => ({
-      ...prevEditedFields,
-      [field]: newText,
-    }));
-
-    tempText.destroy();
-    layer.draw();
-    setEditField(field);
   };
 
   const removeTextFromCanvas = (field) => {
@@ -289,7 +251,12 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
   const isSelectedElement = !!selectedElement && (selectedElement.type === "text" || selectedElement.type === "Checkbox");
 
   const handleAlignmentChange = (alignment) => {
-    setAlignment(alignment);
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, ['align'], [alignment]);
+      setAlignment(alignment);
+    } else {
+      setAlignment(alignment);
+    }
   };
 
   const editFieldRef = useRef();
@@ -371,7 +338,7 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
               >
                 {attribute}
               </label>
-              {editField === attribute && (
+              {selectedElement?.field === attribute && (
                 <div>
                   <input
                     type="text"
@@ -380,7 +347,6 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
                     ref={editFieldRef}
                   />
                   <button
-                    type="submit"
                     className="ml-2 px-3 py-1 bg-gray-200 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:bg-gray-300"
                     onClick={() => handleEditSubmit(attribute)}
                   >
