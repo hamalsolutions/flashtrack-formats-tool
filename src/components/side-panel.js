@@ -89,6 +89,44 @@ export default function SidePanel({
       icon: DeviceMobileIcon,
     },
     {
+      label: 'Format Size',
+      content: (
+        <SizeLabelEditor
+          initialW={selectedW}
+          initialH={selectedH}
+          initialRotation={selectedRotation}
+          onChangeW={handleChangeW}
+          onChangeH={handleChangeH}
+          onChangeRotation={handleChangeRotation}
+          selectedMetric={selectedMetric}
+          setSelectedMetric={setSelectedMetric}
+        />
+      ),
+      icon: ArrowsExpandIcon,
+    },
+    {
+      label: 'Fields',
+      content: (
+        <FieldsEditor 
+          canvasElements={canvasElements}
+          onChange={onChange} 
+          onDelete={onDelete}
+        />
+      ),
+      icon: TagIcon,
+    },
+    {
+      label: 'Images and Barcodes',
+      content: (
+        <ImageEditor
+          imageList={imageList}
+          setImageList={setImageList}
+          onChange={onChange}
+        />
+      ),
+      icon: PhotographIcon,
+    },
+    {
       label: 'Text',
       content: (
         <TextEditor
@@ -110,33 +148,11 @@ export default function SidePanel({
       ),
       icon: PencilIcon,
     },
-    {
-      label: 'Images',
-      content: (
-        <ImageEditor
-          imageList={imageList}
-          setImageList={setImageList}
-          onChange={onChange}
-        />
-      ),
-      icon: PhotographIcon,
-    },
     /* {
       label: "Elements",
       content: "Aqui se mostraran elementos como formas",
       icon: CubeIcon,
     },*/
-    {
-      label: 'Fields',
-      content: (
-        <FieldsEditor 
-          canvasElements={canvasElements}
-          onChange={onChange} 
-          onDelete={onDelete}
-        />
-      ),
-      icon: TagIcon,
-    },
     {
       label: 'Background',
       content: (
@@ -159,22 +175,7 @@ export default function SidePanel({
       ),
       icon: CollectionIcon,
     },
-    {
-      label: 'Resize',
-      content: (
-        <SizeLabelEditor
-          initialW={selectedW}
-          initialH={selectedH}
-          initialRotation={selectedRotation}
-          onChangeW={handleChangeW}
-          onChangeH={handleChangeH}
-          onChangeRotation={handleChangeRotation}
-          selectedMetric={selectedMetric}
-          setSelectedMetric={setSelectedMetric}
-        />
-      ),
-      icon: ArrowsExpandIcon,
-    },
+  
   ];
 
   const handleOptionClick = (option) => {

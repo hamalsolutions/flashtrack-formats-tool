@@ -1,6 +1,10 @@
 import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { Transformer, Text } from 'react-konva';
 import { Text as konvaText } from 'konva';
+import LeftAlignmentIcon from '../svg/left-alignment.svg';
+import CenterAlignmentIcon from '../svg/center-alignment.svg';
+import RightAlignmentIcon from '../svg/right-alignment.svg';
+import Konva from 'konva';
 
 export const LoadField = ({
     id,
@@ -16,13 +20,15 @@ export const LoadField = ({
     fontFamily,
     fontSize,
     fill,
+    align,
     setCurrentElementWidth,
     onDragMove,
-    onDragEnd, 
+    onDragEnd,
+    position,
   }) => {
     const textRef = useRef();
     const trRef = useRef();
-  
+
     useEffect(() => {
         if (isSelected) {
             trRef.current.nodes([textRef.current]);
@@ -53,6 +59,7 @@ export const LoadField = ({
               fontFamily={fontFamily}
               fontSize={fontSize}
               fill={fill}
+              align={align}
               width={width}
               height={height}
               draggable={draggable}
@@ -111,12 +118,15 @@ export const LoadField = ({
 };
 
 
-export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
+export default function FieldsEditor({ canvasElements, onChange, onDelete, selectedElement, fontSize }) {
   const [search, setSearch] = useState("");
   const [editedFields, setEditedFields] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
   const [editField, setEditField] = useState(""); 
   const [fields, setFields] = useState([]);
+  const [alignment, setAlignment] = useState('left');
+  const [layer, setLayer] = useState(null);
+  const [defaultFontSize, setDefaultFontSize] = useState(fontSize);
 
   useEffect(() => {
     const fetchFields = async () => {
@@ -205,19 +215,27 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
         data.toLowerCase().includes(search.toLowerCase())
       );
 
-  const handleEditSubmit = (field) => {
-    const newText = editFieldRef.current.value;
-    const element = canvasElements.find((element) => element?.field === field);
-    
-    onChange(element, {
-      text: newText
-    });
+  const updateSelectedElement = (id, property, value) => {
+    const element = canvasElements.find((element) => element.id === id);
+    const stateAttrs = Array.isArray(property) > 0 
+      ? property.reduce((acc, curr, index) => {
+          acc[curr] = value[index];
+          return acc;
+        }, {}) 
+      : { [property]: value };
+    onChange(element, stateAttrs);
+  }
 
-    setEditedFields((prevEditedFields) => ({
-      ...prevEditedFields,
-      [field]: newText,
-    }));
-    setEditField("");
+  const handleEditSubmit = (field) => {
+    if (selectedElement?.field === field) {
+      const newText = editFieldRef.current.value;
+      updateSelectedElement(selectedElement.id, ["text"], [newText]);
+      setEditedFields((prevEditedFields) => ({
+        ...prevEditedFields,
+        [field]: newText,
+      }));
+      setEditField(newText);
+    }
   };
 
   const removeTextFromCanvas = (field) => {
@@ -228,6 +246,17 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
       const { [field]: fieldToRemove, ...newEditedFields } = prevEditedFields;
       return newEditedFields;
     });
+  };
+
+  const isSelectedElement = !!selectedElement && (selectedElement.type === "text" || selectedElement.type === "Checkbox");
+
+  const handleAlignmentChange = (alignment) => {
+    if (isSelectedElement) {
+      updateSelectedElement(selectedElement.id, ['align'], [alignment]);
+      setAlignment(alignment);
+    } else {
+      setAlignment(alignment);
+    }
   };
 
   const editFieldRef = useRef();
@@ -264,6 +293,27 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
             />
           </div>
         </div>
+        <div className="flex justify-start mt-4 space-x-2">
+        {/* Button Alignment text */}
+        <button
+          className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300 ${ alignment === 'left' ? 'bg-gray-200' : ''}`}
+          onClick={() => handleAlignmentChange('left')}
+        >
+          <img src={LeftAlignmentIcon} alt="Left Alignment" className="w-6 h-6" />
+        </button>
+        <button
+          className={`flex items-center justify-center px-3 py-2 rounded bg-gray-300 ${ alignment === 'center' ? 'bg-gray-200' : ''} `}
+          onClick={() => handleAlignmentChange('center')}
+        >
+          <img src={CenterAlignmentIcon} alt="Center Alignment" className="w-6 h-6" />
+        </button>
+        <button
+          className={`flex items-center justify-center px-3 py-2 rounded hover:bg-gray-300 ${ alignment === 'right' ? 'bg-gray-200' : ''}`}
+          onClick={() => handleAlignmentChange('right')}
+        >
+          <img src={RightAlignmentIcon} alt="Right Alignment" className="w-6 h-6" />
+        </button>
+      </div>
         <p className="block text-sm font-medium text-gray-700 px-3 sm:pt-4 pb-5">
           Fields Selected:{" "}
           <span className="text-sm  font-normal text-gray-700">
@@ -288,7 +338,7 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
               >
                 {attribute}
               </label>
-              {editField === attribute && (
+              {selectedElement?.field === attribute && (
                 <div>
                   <input
                     type="text"
@@ -297,7 +347,6 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete }) {
                     ref={editFieldRef}
                   />
                   <button
-                    type="submit"
                     className="ml-2 px-3 py-1 bg-gray-200 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:bg-gray-300"
                     onClick={() => handleEditSubmit(attribute)}
                   >
