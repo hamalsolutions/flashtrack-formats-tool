@@ -260,7 +260,8 @@ export default function ImageEditor({ imageList, setImageList, onChange }) {
                     height: barcodeHeight,
                     displayValue: displayValue && (selectedBarcodeType.value !== "ITF14"),
                     flat: true,
-                    margin: 0
+                    margin: 0,
+                    fontSize: 13,
                 });
                 setPreviewImage({
                     url: canvas.toDataURL(),
@@ -302,7 +303,7 @@ export default function ImageEditor({ imageList, setImageList, onChange }) {
             id: Date.now().toString(),
             type: "barcode",
             barcodeValue: barcode,
-            barcodeType: selectedBarcodeType.key,
+            barcodeType: selectedBarcodeType.value,
             barcodeDisplayValue: displayValue,
             barcodeWidth: barcodeWidth,
             barcodeHeight: barcodeHeight,
