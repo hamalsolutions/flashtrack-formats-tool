@@ -514,6 +514,7 @@ export default function App() {
       );
     }
     if (type === 'image' || type === 'barcode') {
+      const isBarcode = type === 'barcode';
       return (
         <LoadImage
           id={element.id}
@@ -522,7 +523,10 @@ export default function App() {
           y={element.state.y}
           width={element.state.width}
           height={element.state.height}
-          isBarcode={type === 'barcode'}
+          isBarcode={isBarcode}
+          barcodeValue={isBarcode ? element.barcodeValue : 0}
+          barcodeType={isBarcode ? element.barcodeType : ""}
+          barcodeDisplayValue={isBarcode ? element.barcodeDisplayValue : false}
           setCurrentElementWidth={setCurrentElementWidth}
           {...commonProps}
         />

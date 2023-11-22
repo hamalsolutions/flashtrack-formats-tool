@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, Fragment } from "react";
-import { Image, Transformer } from "react-konva";
+import { Image, Transformer, Line, Text, Group } from "react-konva";
 import { createCanvas } from "canvas";
 import useImage from 'use-image';
 import JsBarcode from 'jsbarcode';
@@ -16,47 +16,96 @@ export const LoadImage = ({
     onSelect,
     onChange,
     isBarcode,
+    barcodeValue,
+    barcodeType,
+    barcodeDisplayValue,
     onDragMove,
     onDragEnd,
     setCurrentElementWidth,
 }) => {
     const imageRef = useRef();
     const trRef = useRef();
+    const groupRef = useRef();
+    const itf14TextRef = useRef();
 
     const [image] = useImage(url);
 
+    // width 1 = 135 , 2 = 270 , 3 = 405
+    // height es 1 a 1
+
+    const freeZonesITF14 = 38.400004838 // 10.16 mm
+    const coverBarsWidthITF14 = 18.141734569 // 4.8 mm
+
+    const [itf14TextWidth, setItf14TextWidth] = useState(0);
+
     useEffect(() => {
         if (isSelected) {
-            trRef.current.nodes([imageRef.current]);
+            trRef.current.nodes([groupRef.current]);
             trRef.current.getLayer().batchDraw();
-            setCurrentElementWidth(imageRef.current.width());
+            setCurrentElementWidth(groupRef.current.width());
         }
+        updateItf14TextWidth();
     }, [isSelected]);
     
+
+    const updateLinesPosition = () => {
+        const node = imageRef.current;
+        const imageWidth = node.width();
+        const imageHeight = node.height();
+        groupRef.current.position({
+            x: x + imageWidth / 2,
+            y: y + imageHeight / 2,
+        });
+        groupRef.current.getLayer().batchDraw();
+    };
+
+    const updateItf14TextWidth = () => {
+        const node = itf14TextRef.current;
+        const width = node.getTextWidth();
+        setItf14TextWidth(width);
+    };
+
+
+    function GTINCheckDigit(numero) {
+        let code = numero.toString();
+        let array = code.split('').reverse();
+
+        let total = 0;
+        let i = 1;
+        array.forEach(number => {
+            number = parseInt(number);
+            if (i % 2 === 0) {
+                total = total + number;
+            }
+            else
+            {
+                total = total + (number * 3);
+            }
+            i++;
+        });
+
+        return `${code}${(Math.ceil(total / 10) * 10) - total}`;
+    }
+
     return (
         <Fragment>
-            <Image
-                ref={imageRef}
-                x={x}
-                y={y}
-                width={width}
-                height={height}
+            <Group
+                ref={groupRef}
                 draggable={draggable}
-                onDragEnd={(e) => {
-                    const node = imageRef.current;
-                    onChange({
-                        x: node.x(),
-                        y: node.y(),
-                    });
-                    // Llama a la función onDragEnd si está definida
-                    if (onDragEnd) {
-                        onDragEnd(e);
-                    }
-                }}
-                id={id}
                 onClick={onSelect}
                 onTap={onSelect}
-                image={image}
+                onDragMove={onDragMove}
+                onDragEnd={(e) => {
+                    const node = groupRef.current;
+                    x = node.x() - width / 2;
+                    y = node.y() - height / 2;
+        
+                    if (onDragEnd) {
+                    onDragEnd(e);
+                    }
+        
+                    updateLinesPosition();
+                }}
                 onTransformEnd={(e) => {
                     const node = imageRef.current;
                     const scaleX = node.scaleX();
@@ -81,19 +130,93 @@ export const LoadImage = ({
                         height,
                     });
                 }}
-                // Llama a la función onDragMove si está definida
-                onDragMove={onDragMove}
-            />
-            {isSelected && (
-                <Transformer
-                    ref={trRef}
-                    boundBoxFunc={(oldBox, newBox) => {
-                        if (newBox.width < 5 || newBox.height < 5) {
-                            return oldBox;
-                        }
-                        return newBox;
-                    }}
+            >
+            {barcodeType === 'ITF14' ? 
+                (<>
+                    {/* Línea superior */}
+                    <Line
+                        points={[-freeZonesITF14, -9.1, width + freeZonesITF14, -9.1]}
+                        stroke="black"
+                        strokeWidth={coverBarsWidthITF14}
+                    />
+
+                    {/* Línea inferior */}
+                    <Line
+                        points={[-freeZonesITF14, height + 9.1, width + freeZonesITF14, height + 9.1]}
+                        stroke="black"
+                        strokeWidth={coverBarsWidthITF14}
+                    />
+
+                    {/* Línea izquierda */}
+                    <Line
+                        points={[
+                            - freeZonesITF14, 
+                            - coverBarsWidthITF14, 
+                            - freeZonesITF14, 
+                            height + coverBarsWidthITF14
+                        ]}
+                        stroke="black"
+                        strokeWidth={coverBarsWidthITF14}
+                    /> 
+
+                    {/* Línea derecha */}
+                    <Line
+                        points={[
+                            width + freeZonesITF14, 
+                            - coverBarsWidthITF14, 
+                            width + freeZonesITF14, 
+                            height + coverBarsWidthITF14
+                        ]}
+                        stroke="black"
+                        strokeWidth={coverBarsWidthITF14}
+                    />
+                    {barcodeDisplayValue ? (<>
+                        {/* Codigo de barras */}
+                        <Text
+                            ref={itf14TextRef}
+                            x={(width / 2) - (itf14TextWidth / 2)}
+                            y={height + 25}
+                            text={`${GTINCheckDigit(barcodeValue)}`}
+                            fontSize={20}
+                            fontFamily="monospace"
+                        />
+                    </>) :
+                    (
+                        <Text
+                        ref={itf14TextRef}
+                    />
+                    )}
+                </>) : 
+                (<>
+                    <Text
+                        ref={itf14TextRef}
+                    />
+                </>)
+            }
+
+                {/* Imagen */}
+                <Image
+                    ref={imageRef}
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    image={image}
+                    id={id}
                 />
+            </Group>
+            
+
+            {isSelected && (
+            <Transformer
+                ref={trRef}
+                boundBoxFunc={(oldBox, newBox) => {
+                if (newBox.width < 5 || newBox.height < 5) {
+                    return oldBox;
+                }
+                return newBox;
+                }}
+            />
             )}
         </Fragment>
     );
@@ -111,6 +234,7 @@ export default function ImageEditor({ imageList, setImageList, onChange }) {
         { key: "EAN8", value: "EAN8" },
         { key: "EAN13", value: "EAN13" },
         { key: "MSI", value: "MSI" },
+        { key: "ITF14", value: "ITF14"},
     ];
     const [selectedBarcodeType, setSelectedBarcodeType] = useState(barcodeTypeList[0]);
     const [previewImage, setPreviewImage] = useState(null);
@@ -134,7 +258,7 @@ export default function ImageEditor({ imageList, setImageList, onChange }) {
                     format: selectedBarcodeType.value,
                     width: barcodeWidth,
                     height: barcodeHeight,
-                    displayValue: displayValue,
+                    displayValue: displayValue && (selectedBarcodeType.value !== "ITF14"),
                     flat: true,
                     margin: 0,
                     fontSize: 13,
