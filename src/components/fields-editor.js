@@ -118,7 +118,7 @@ export const LoadField = ({
 };
 
 
-export default function FieldsEditor({ canvasElements, onChange, onDelete, selectedElement, fontSize }) {
+export default function FieldsEditor({ canvasElements, onChange, onDelete, selectedElement, fontSize, position }) {
   const [search, setSearch] = useState("");
   const [editedFields, setEditedFields] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
@@ -127,6 +127,17 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
   const [alignment, setAlignment] = useState('left');
   const [layer, setLayer] = useState(null);
   const [defaultFontSize, setDefaultFontSize] = useState(fontSize);
+
+  
+  useEffect(() => {
+    const newLayer = new Konva.Layer();
+    setLayer(newLayer);
+    newLayer.add(new Konva.Text()); 
+  
+    return () => {
+      newLayer.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchFields = async () => {
@@ -229,7 +240,36 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
   const handleEditSubmit = (field) => {
     if (selectedElement?.field === field) {
       const newText = editFieldRef.current.value;
-      updateSelectedElement(selectedElement.id, ["text"], [newText]);
+      
+      let x;
+      const fontSize = isSelectedElement ? selectedElement.state.fontSize : defaultFontSize;
+      const fontFamily = isSelectedElement ? selectedElement.state.fontFamily : fontFamily;
+  
+      const tempText = new Konva.Text({
+        text: newText,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+      });
+  
+      layer.add(tempText);
+      tempText.hide();
+      layer.draw();
+  
+      const newWidth = tempText.width();
+      
+      const widthFinal = Math.min(newWidth);
+
+      if (position === "sides") {
+        x = selectedElement.state.x - ((newWidth - selectedElement.state.width) / 2);
+       } else if (position === "right") {
+        x = selectedElement.state.x - (newWidth - selectedElement.state.width);
+       }
+       
+       if (x) {
+        updateSelectedElement(selectedElement.id, ["text", "width", "x"], [newText, widthFinal, x]);
+      } else {
+         updateSelectedElement(selectedElement.id, ["text"], [newText]);
+      } 
       setEditedFields((prevEditedFields) => ({
         ...prevEditedFields,
         [field]: newText,
