@@ -223,7 +223,8 @@ export const LoadText = ({
   setCurrentElementWidth,
   onDragMove,
   onDragEnd,
-  align
+  align,
+  setPosition,
 }) => {
   const textRef = useRef();
   const trRef = useRef();
@@ -232,6 +233,7 @@ export const LoadText = ({
       if (isSelected) {
           trRef.current.nodes([textRef.current]);
           trRef.current.getLayer().batchDraw();
+          setPosition('none');
       }
   }, [isSelected]);
 

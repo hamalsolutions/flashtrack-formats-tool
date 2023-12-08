@@ -496,6 +496,7 @@ export default function App() {
           fill={element.state.fill}
           align={element.state.align}
           setCurrentElementWidth={setCurrentElementWidth}
+          setPosition={setPosition}
           {...commonProps}
         />
       );
