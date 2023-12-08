@@ -220,8 +220,8 @@ const generatePHP = (elements, format) => {
         } else if (element.type === "barcode") {
             // if element is barcode then use barcode function that receives ($value,$x,$y,$scale,$height,$barcodeType,$angle=0)
             // if barcodeDisplayValue is true we add barcodeTexto it needs ($textScale,$marginLeft,$marginTop,$guardBarsMargin,$fontFileName)
-            const x = Math.floor(element.state.x);
-            const y = Math.floor(element.state.y);
+            const x = element.barcodeType === "ITF14" ? Math.floor(element.state.x) - 48 : Math.floor(element.state.x);
+            const y = element.barcodeType === "ITF14" ? Math.floor(element.state.y) - 19 : Math.floor(element.state.y);
             const barcodeValue = `$UPC`;
             const width = Math.floor(element.barcodeWidth ?? 2);
             const height = Math.floor(element.barcodeHeight ?? 100);
