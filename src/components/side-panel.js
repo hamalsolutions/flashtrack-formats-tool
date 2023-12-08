@@ -112,6 +112,7 @@ export default function SidePanel({
           onChange={onChange} 
           onDelete={onDelete}
           selectedElement={selectedElement}
+          position ={position}
         />
       ),
       icon: TagIcon,
