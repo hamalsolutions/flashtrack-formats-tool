@@ -127,8 +127,9 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
   const [alignment, setAlignment] = useState('left');
   const [layer, setLayer] = useState(null);
   const [defaultFontSize, setDefaultFontSize] = useState(fontSize);
+  const barcodeDisable = ['UPC', 'CODE128', 'CODE39', 'EAN8', 'EAN13', 'MSI', 'ITF14'];
 
-  
+ 
   useEffect(() => {
     const newLayer = new Konva.Layer();
     setLayer(newLayer);
@@ -163,6 +164,42 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
 
     fetchFields();
   }, []);
+
+ useEffect(() => {
+    const markCheckboxForBarcodeType = () => {
+      const barcodeTypesOnCanvas = new Set();
+  
+      // Obtener los tipos de códigos de barras presentes en el lienzo
+      canvasElements.forEach((element) => {
+        if (element.type === 'barcode') {
+          barcodeTypesOnCanvas.add(element.barcodeType);
+        }
+      });
+      console.log(barcodeTypesOnCanvas);
+      // Conservar las selecciones anteriores y agregar las nuevas
+      setSelectedFields((prevSelectedFields) => {
+        const updatedFields = { ...prevSelectedFields };
+
+        Object.keys(fields).forEach((field) => {
+          if (barcodeTypesOnCanvas.has(field)) {
+            updatedFields[field] = barcodeTypesOnCanvas.has(field);
+          }
+        });
+     
+        Object.keys(selectedFields).forEach((field) => {
+          if (!barcodeTypesOnCanvas.has(field) && barcodeDisable.includes(field)) {
+            updatedFields[field] = false;
+            delete updatedFields[field];
+          }
+        });
+
+        return updatedFields;
+      });
+    };
+    markCheckboxForBarcodeType();
+  }, [canvasElements, fields]);
+
+  console.log(selectedFields);
 
   const handleCheckboxChange = (e) => {
     const name = e.target.name;
@@ -363,14 +400,15 @@ export default function FieldsEditor({ canvasElements, onChange, onDelete, selec
         <div className="overflow-y-auto h-[610px] px-1">
           {results.map((attribute, index) => (
             <div key={index} className="flex items-center">
-              <input
+            <input
                 id={`filter-mobile-${attribute}-${index}`}
                 name={attribute}
                 defaultValue={selectedFields[attribute]}
                 type="checkbox"
-                defaultChecked={selectedFields[attribute]}
+                checked={selectedFields[attribute]}
                 className="h-4 w-4 border-gray-300 rounded text-ft-blue-300 focus:ring-ft-yellow-400"
                 onChange={handleCheckboxChange}
+                disabled={barcodeDisable.includes(attribute)}
               />
               <label
                 htmlFor={`filter-mobile-${attribute}-${index}`}
