@@ -57,6 +57,7 @@ const getDefaultBarcodeValue = (barcodeType) => {
         case "CODE39": return "1234567890";
         case "CODE128": return "1234567890";
         case "MSI": return "1234567890";
+        case "ITF14": return "1234567890123";
         default: return "";
     }
 }
@@ -88,7 +89,11 @@ const generatePHP = (elements, format) => {
     const isBarcodeProvided = !!barcode;
 
     if (isBarcodeProvided) {
-        fields.push("UPC");
+        elements.map((element) => {
+            if (element.type === 'barcode') {
+                fields.push(element.barcodeType);
+            }
+        });
     }
 
     // verify if there is only one barcode
@@ -136,11 +141,11 @@ const generatePHP = (elements, format) => {
         const barcodeElements = elements.filter((element) => element.type === "barcode");
 
         // Utiliza map para generar un array de cadenas y luego únelas en una sola cadena
-    const barcodeValues = barcodeElements.map((barcodeElement, index) => {
-        return `
-        $UPC${index + 1} = asignar(${filteredFieldsNoQTY.length + index + 1}, '${barcodeElement.barcodeValue}');
-        `;
-    });
+        const barcodeValues = barcodeElements.map((barcodeElement, index) => {
+            return `
+            $${barcodeElement.barcodeType} = asignar(${filteredFieldsNoQTY.length + index + 1}, '${barcodeElement.barcodeValue}');
+            `;
+        });
 
         // Úne las cadenas con un salto de línea entre ellas
         stringPHP += barcodeValues.join('');
@@ -232,10 +237,10 @@ const generatePHP = (elements, format) => {
             // if barcodeDisplayValue is true we add barcodeTexto it needs ($textScale,$marginLeft,$marginTop,$guardBarsMargin,$fontFileName)
             const x = element.barcodeType === "ITF14" ? Math.floor(element.state.x) - 48 : Math.floor(element.state.x);
             const y = element.barcodeType === "ITF14" ? Math.floor(element.state.y) - 19 : Math.floor(element.state.y);
-            const barcodeValue = `$UPC${upcCounter}`;
+            const barcodeType = element.barcodeType ?? "UPC";
+            const barcodeValue = `$${barcodeType}`;
             const width = Math.floor(element.barcodeWidth ?? 2);
             const height = Math.floor(element.barcodeHeight ?? 100);
-            const barcodeType = element.barcodeType ?? "UPC";
             const rotateAngle = convertToNearestPositiveAngle(element.state.rotation ?? 0);
             const barcodeDisplayValue = Number(element.barcodeDisplayValue ?? 0);
             const defaultBarcodeValue = getDefaultBarcodeValue(barcodeType);
