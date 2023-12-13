@@ -79,11 +79,7 @@ const generatePHP = (elements, format) => {
     }
 
     // label can be created if fields > 1
-    if (fields.length <= 1) {
-        alert("You cannot create a label with less than 1 field");
-        return false;
-    }
-
+ 
     // barcode existance verification
     const barcode = elements.find((element) => element.type === "barcode");
     const isBarcodeProvided = !!barcode;
@@ -96,10 +92,8 @@ const generatePHP = (elements, format) => {
         });
     }
 
-    // verify if there is only one barcode
-    const hasOnlyOneBarcode = elements.filter((element) => element.type === "barcode").length > 0;
-    if (!hasOnlyOneBarcode) {
-        alert("You cannot create a label with more than 1 barcode");
+    if (fields.length <= 1) {
+        alert("You cannot create a label with less than 1 field or without a barcode");
         return false;
     }
 
