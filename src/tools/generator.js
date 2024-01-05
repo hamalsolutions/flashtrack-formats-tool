@@ -57,13 +57,15 @@ const getDefaultBarcodeValue = (barcodeType) => {
         case "CODE39": return "1234567890";
         case "CODE128": return "1234567890";
         case "MSI": return "1234567890";
+        case "ITF14": return "1234567890123";
         default: return "";
     }
 }
 
 const generatePHP = (elements, format) => {
     let stringPHP = initPHPstructure;
-
+    let upcCounter = 1;
+ 
     // filtering elements no qty
     const elementsNoQTY = elements.filter((element) => element.field !== "QTY");
     // filtering fields from canvas elements
@@ -77,23 +79,21 @@ const generatePHP = (elements, format) => {
     }
 
     // label can be created if fields > 1
-    if (fields.length <= 1) {
-        alert("You cannot create a label with less than 1 field");
-        return false;
-    }
-
+ 
     // barcode existance verification
     const barcode = elements.find((element) => element.type === "barcode");
     const isBarcodeProvided = !!barcode;
 
     if (isBarcodeProvided) {
-        fields.push("UPC");
+        elements.map((element) => {
+            if (element.type === 'barcode') {
+                fields.push(element.barcodeType);
+            }
+        });
     }
 
-    // verify if there is only one barcode
-    const hasOnlyOneBarcode = elements.filter((element) => element.type === "barcode").length === 1;
-    if (!hasOnlyOneBarcode) {
-        alert("You cannot create a label with more than 1 barcode");
+    if (fields.length <= 1) {
+        alert("You cannot create a label with less than 1 field or without a barcode");
         return false;
     }
 
@@ -129,13 +129,22 @@ const generatePHP = (elements, format) => {
     });
     stringPHP += fieldVariables.join("");
 
-    // upc variable declaration and default value
+   // upc variable declaration and default value
     if (isBarcodeProvided) {
-        const stringUpc = `
-        $UPC = asignar(${filteredFieldsNoQTY.length + 1}, '${barcode.barcodeValue}');
-        `;
-        stringPHP += stringUpc;
+        // Verifica si hay elementos de tipo "barcode"
+        const barcodeElements = elements.filter((element) => element.type === "barcode");
+
+        // Utiliza map para generar un array de cadenas y luego únelas en una sola cadena
+        const barcodeValues = barcodeElements.map((barcodeElement, index) => {
+            return `
+            $${barcodeElement.barcodeType} = asignar(${filteredFieldsNoQTY.length + index + 1}, '${barcodeElement.barcodeValue}');
+            `;
+        });
+
+        // Úne las cadenas con un salto de línea entre ellas
+        stringPHP += barcodeValues.join('');
     }
+
 
     // rotation angle for the entire image
     format.angle = convertToNearestPositiveAngle(format.angle);
@@ -220,16 +229,16 @@ const generatePHP = (elements, format) => {
         } else if (element.type === "barcode") {
             // if element is barcode then use barcode function that receives ($value,$x,$y,$scale,$height,$barcodeType,$angle=0)
             // if barcodeDisplayValue is true we add barcodeTexto it needs ($textScale,$marginLeft,$marginTop,$guardBarsMargin,$fontFileName)
-            const x = Math.floor(element.state.x);
-            const y = Math.floor(element.state.y);
-            const barcodeValue = `$UPC`;
+            const x = element.barcodeType === "ITF14" ? Math.floor(element.state.x) - 48 : Math.floor(element.state.x);
+            const y = element.barcodeType === "ITF14" ? Math.floor(element.state.y) - 19 : Math.floor(element.state.y);
+            const barcodeType = element.barcodeType ?? "UPC";
+            const barcodeValue = `$${barcodeType}`;
             const width = Math.floor(element.barcodeWidth ?? 2);
             const height = Math.floor(element.barcodeHeight ?? 100);
-            const barcodeType = element.barcodeType ?? "UPC";
             const rotateAngle = convertToNearestPositiveAngle(element.state.rotation ?? 0);
             const barcodeDisplayValue = Number(element.barcodeDisplayValue ?? 0);
             const defaultBarcodeValue = getDefaultBarcodeValue(barcodeType);
-
+            upcCounter++;
             return `
             barcodeAjustado(${barcodeValue},${x},${y},${width},${height},'${barcodeType}',${rotateAngle},'${defaultBarcodeValue}',${barcodeDisplayValue});
             `;

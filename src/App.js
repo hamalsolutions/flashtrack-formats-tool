@@ -72,7 +72,12 @@ export default function App() {
   const handleDragMove = (e) => {
     const shape = e.target;
     const layer = shape.getLayer();
-    const shapes = layer.find(node => node.getClassName() === 'Image' || node.getClassName() === 'Text');
+   
+    const shapes = layer.find((node) => {
+      // Incluir nodos 'Group' y nodos de texto independientes que no están dentro de un grupo
+      return (node.getClassName() === 'Group') || (node.getClassName() === 'Text' && !node.findAncestors('Group').length);
+    });
+    
     setShowGuides(true);
     let lineGuideX = null;
     let lineGuideY = null;
@@ -144,9 +149,9 @@ export default function App() {
 
     setGuideLines({ vertical: lineGuideX, horizontal: lineGuideY });
     setLineEnds({ endX: lineEndX, endY: lineEndY });
-
+  
     shape.position({
-      x: lineGuideX !== null ? lineGuideX - shape.width() / 2 : shape.x(),
+      x: lineGuideX !== null ? lineGuideX - shape.width()  / 2 : shape.x(),
       y: lineGuideY !== null ? lineGuideY - shape.height() / 2 : shape.y(),
     });
 
@@ -465,7 +470,6 @@ export default function App() {
   // This function is called to render the canvas elements
   const getCanvasElement = (element) => {
     const { type, draggable, ...rest } = element;
-
     const isSelected = (selectedElements && selectedElements?.some((selected) => selected.id === element.id)) || selectedElement?.id === element.id;
 
     const commonProps = {
@@ -492,6 +496,7 @@ export default function App() {
           fill={element.state.fill}
           align={element.state.align}
           setCurrentElementWidth={setCurrentElementWidth}
+          setPosition={setPosition}
           {...commonProps}
         />
       );

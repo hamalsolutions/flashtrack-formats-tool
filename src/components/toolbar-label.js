@@ -101,10 +101,11 @@ export default function ToolbarLabel({
 
   const handleSelectAlign = (e) => {
     const selectAlign = e.target.value; 
+    let coverBarsWidthXITF14 = 0;
+    let coverBarsWidthYITF14 = 0;
     const canvasWidth = Math.floor(selectedMetric === 'in' ? width * inchesToPixels : width * centimetersToPixels);
     const canvasHeight = Math.floor(selectedMetric === 'in' ? height * inchesToPixels : height * centimetersToPixels);
     
-
     if (selectedElements?.length > 0) {
 
       const updatedElements = selectedElements.map((selectedElement) => {
@@ -113,24 +114,29 @@ export default function ToolbarLabel({
         let x = selectedElement.state.x;
         let y = selectedElement.state.y;
 
+        if (selectedElement.barcodeType === 'ITF14') {
+          coverBarsWidthXITF14 = 45
+          coverBarsWidthYITF14 = 18
+        }
+
         switch (selectAlign) {
           case 'center':
             x = (canvasWidth / 2) - (elementWidth / 2);
             break;
           case 'left':
-            x = canvasWidth * 0.01;
+            x = (canvasWidth * 0.01 ) + coverBarsWidthXITF14;
             break;
           case 'right':
-            x = canvasWidth - elementWidth - canvasWidth * 0.01;
+            x = canvasWidth - (elementWidth - canvasWidth * 0.01 ) - coverBarsWidthXITF14;
             break;
           case 'top':
-            y = 0; // Alineación en la parte superior
+            y = 0 + coverBarsWidthYITF14 ; // Alineación en la parte superior
             break;
           case 'middle':
             y = (canvasHeight / 2) - (elementHeight / 2); // Alineación en el medio vertical
             break;
           case 'bottom':
-            y = canvasHeight - elementHeight; // Alineación en la parte inferior
+            y = canvasHeight - (elementHeight + coverBarsWidthYITF14); // Alineación en la parte inferior
             break;
           default:
             break;
@@ -152,29 +158,35 @@ export default function ToolbarLabel({
       handleCanvasElementsChange(readyToPaint);
 
     } else if (selectedElement) {
+      
       const elementWidth = selectedElement.state.width;
       const elementHeight = selectedElement.state.height;
       let x = 0;
       let y = 0;
+      
+      if (selectedElement.barcodeType === 'ITF14') {
+        coverBarsWidthXITF14 = 45
+        coverBarsWidthYITF14 = 18
+      }
 
       switch (selectAlign) {
         case "center":
           x = (canvasWidth / 2) - (elementWidth / 2);
           break;
         case "left":
-          x = canvasWidth * 0.01;
+          x = (canvasWidth  * 0.01) + coverBarsWidthXITF14;
           break;
         case "right":
-          x = (canvasWidth - elementWidth) - (canvasWidth * 0.01);
+          x = (canvasWidth - coverBarsWidthXITF14 - elementWidth) - (canvasWidth * 0.01);
           break;
         case "top":
-          y = 0; // Alineación en la parte superior
+          y = 0 + coverBarsWidthYITF14; // Alineación en la parte superior
           break;
         case "middle":
           y = (canvasHeight / 2) - (elementHeight / 2); // Alineación en el medio vertical
           break;
         case "bottom":
-          y = canvasHeight - elementHeight; // Alineación en la parte inferior
+          y = canvasHeight - (elementHeight + coverBarsWidthYITF14); // Alineación en la parte inferior
           break;
         default:
           break;

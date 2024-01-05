@@ -29,7 +29,7 @@ export const LoadImage = ({
     const itf14TextRef = useRef();
 
     const [image] = useImage(url);
-
+   
     // width 1 = 135 , 2 = 270 , 3 = 405
     // height es 1 a 1
 
@@ -48,7 +48,7 @@ export const LoadImage = ({
     }, [isSelected]);
     
 
-    const updateLinesPosition = () => {
+    /*const updateLinesPosition = () => {
         const node = imageRef.current;
         const imageWidth = node.width();
         const imageHeight = node.height();
@@ -58,13 +58,13 @@ export const LoadImage = ({
         });
         groupRef.current.getLayer().batchDraw();
     };
-
+*/
+    
     const updateItf14TextWidth = () => {
         const node = itf14TextRef.current;
         const width = node.getTextWidth();
         setItf14TextWidth(width);
     };
-
 
     function GTINCheckDigit(numero) {
         let code = numero.toString();
@@ -86,142 +86,154 @@ export const LoadImage = ({
 
         return `${code}${(Math.ceil(total / 10) * 10) - total}`;
     }
-
+   
     return (
-        <Fragment>
-            <Group
-                ref={groupRef}
-                draggable={draggable}
-                onClick={onSelect}
-                onTap={onSelect}
-                onDragMove={onDragMove}
-                onDragEnd={(e) => {
-                    const node = groupRef.current;
-                    x = node.x() - width / 2;
-                    y = node.y() - height / 2;
-        
-                    if (onDragEnd) {
-                    onDragEnd(e);
-                    }
-        
-                    updateLinesPosition();
-                }}
-                onTransformEnd={(e) => {
-                    const node = imageRef.current;
-                    const scaleX = node.scaleX();
-                    const scaleY = node.scaleY();
-                    let width = Math.max(5, node.width() * scaleX);
-                    let height = Math.max(node.height() * scaleY);
-                    if(!isBarcode){
-                        setCurrentElementWidth(width);
-                    }
-                    if (isBarcode) {
-                        width = node.width();
-                        height = node.height();
-                    }
-
-                    node.scaleX(1);
-                    node.scaleY(1);
-                    onChange({
-                        x: node.x(),
-                        y: node.y(),
-                        rotation: node.rotation(),
-                        width,
-                        height,
-                    });
-                }}
-            >
-            {barcodeType === 'ITF14' ? 
-                (<>
-                    {/* Línea superior */}
-                    <Line
-                        points={[-freeZonesITF14, -9.1, width + freeZonesITF14, -9.1]}
-                        stroke="black"
-                        strokeWidth={coverBarsWidthITF14}
-                    />
-
-                    {/* Línea inferior */}
-                    <Line
-                        points={[-freeZonesITF14, height + 9.1, width + freeZonesITF14, height + 9.1]}
-                        stroke="black"
-                        strokeWidth={coverBarsWidthITF14}
-                    />
-
-                    {/* Línea izquierda */}
-                    <Line
-                        points={[
-                            - freeZonesITF14, 
-                            - coverBarsWidthITF14, 
-                            - freeZonesITF14, 
-                            height + coverBarsWidthITF14
-                        ]}
-                        stroke="black"
-                        strokeWidth={coverBarsWidthITF14}
-                    /> 
-
-                    {/* Línea derecha */}
-                    <Line
-                        points={[
-                            width + freeZonesITF14, 
-                            - coverBarsWidthITF14, 
-                            width + freeZonesITF14, 
-                            height + coverBarsWidthITF14
-                        ]}
-                        stroke="black"
-                        strokeWidth={coverBarsWidthITF14}
-                    />
-                    {barcodeDisplayValue ? (<>
-                        {/* Codigo de barras */}
-                        <Text
-                            ref={itf14TextRef}
-                            x={(width / 2) - (itf14TextWidth / 2)}
-                            y={height + 25}
-                            text={`${GTINCheckDigit(barcodeValue)}`}
-                            fontSize={20}
-                            fontFamily="monospace"
-                        />
-                    </>) :
-                    (
-                        <Text
-                        ref={itf14TextRef}
-                    />
-                    )}
-                </>) : 
-                (<>
-                    <Text
-                        ref={itf14TextRef}
-                    />
-                </>)
-            }
-
-                {/* Imagen */}
-                <Image
-                    ref={imageRef}
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
-                    image={image}
-                    id={id}
-                />
-            </Group>
+    <Fragment>
+        <Group
+            ref={groupRef}
+            draggable={draggable}
+            onClick={onSelect}
+            onTap={onSelect}
+            x={x}
+            y={y}
+            width={width} // Ajustar el ancho
+            height={height}
+            onDragMove={onDragMove}
+            onDragEnd={(e) => {
+                const node = groupRef.current;
+                onChange({
+                    x: node.x(),
+                    y: node.y(),
+                })
             
+            if (onDragEnd) {
+            onDragEnd(e);
+            }
+            //updateLinesPosition();
+            }}
+            onTransformEnd={(e) => {
+            const node = groupRef.current;
+            const scaleX = node.scaleX();
+            const scaleY = node.scaleY();
 
-            {isSelected && (
+            let newWidth = Math.max(5, width * scaleX);
+            let newHeight = Math.max(height * scaleY);
+
+            if(!isBarcode){
+                setCurrentElementWidth(width);
+                }
+            if (isBarcode) {
+                    width = node.width();
+                    height = node.height();
+                }
+            // Escalar el Group
+            node.scaleX(1);
+            node.scaleY(1);
+
+            // Ajustar el width y height del Image
+            const imageNode = imageRef.current;
+            imageNode.width(newWidth);
+            imageNode.height(newHeight);
+
+            onChange({
+                x: node.x(),
+                y: node.y(),
+                rotation: node.rotation(),
+                width: newWidth,
+                height: newHeight,
+            });
+            }}
+            >
+                {barcodeType === 'ITF14' ? 
+                    (
+                        <>
+                        {/* Línea superior */}
+                        <Line
+                            points={[-freeZonesITF14, -9.1, width + freeZonesITF14, -9.1]}
+                            stroke="black"
+                            strokeWidth={coverBarsWidthITF14}
+                        />
+
+                        {/* Línea inferior */}
+                        <Line
+                            points={[-freeZonesITF14, height + 9.1, width + freeZonesITF14, height + 9.1]}
+                            stroke="black"
+                            strokeWidth={coverBarsWidthITF14}
+                        />
+
+                        {/* Línea izquierda */}
+                        <Line
+                            points={[
+                                - freeZonesITF14, 
+                                - coverBarsWidthITF14, 
+                                - freeZonesITF14, 
+                                height + coverBarsWidthITF14
+                            ]}
+                            stroke="black"
+                            strokeWidth={coverBarsWidthITF14}
+                        /> 
+
+                        {/* Línea derecha */}
+                        <Line
+                            points={[
+                                width + freeZonesITF14, 
+                                - coverBarsWidthITF14, 
+                                width + freeZonesITF14, 
+                                height + coverBarsWidthITF14
+                            ]}
+                            stroke="black"
+                            strokeWidth={coverBarsWidthITF14}
+                        />
+                        {barcodeDisplayValue ? (<>
+                            {/* Codigo de barras */}
+                            <Text
+                                ref={itf14TextRef}
+                                x={(width / 2) - (itf14TextWidth / 2)}
+                                y={height + 25}
+                                text={`${GTINCheckDigit(barcodeValue)}`}
+                                fontSize={20}
+                                fontFamily="monospace"
+                            />
+                        </>) :
+                        (
+                            <Text
+                            ref={itf14TextRef}
+                        />
+                        )}
+                            
+                        </>
+                    ) : 
+                    (
+                    <>
+                        <Text
+                        ref={itf14TextRef}
+                        />
+                    </>
+                    )
+                }
+            <Image
+                ref={imageRef} 
+                width={width}
+                height={height}
+                id={id}
+                image={image}
+            />
+        </Group>
+    
+        {isSelected && (
             <Transformer
                 ref={trRef}
                 boundBoxFunc={(oldBox, newBox) => {
-                if (newBox.width < 5 || newBox.height < 5) {
-                    return oldBox;
-                }
-                return newBox;
+                    if (newBox.width < 5 || newBox.height < 5) {
+                        return oldBox;
+                    }
+                    return newBox;
                 }}
             />
-            )}
-        </Fragment>
+        )}
+    </Fragment>  
     );
 };
-
 
 export default function ImageEditor({ imageList, setImageList, onChange }) {
     const [view, setView] = useState("images");
